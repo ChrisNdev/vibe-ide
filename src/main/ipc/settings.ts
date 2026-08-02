@@ -2,9 +2,10 @@ import { ipcMain, app, shell } from 'electron'
 import path from 'path'
 import os from 'os'
 import fsSync from 'fs'
-import { execFile } from 'child_process'
+import fs from 'fs/promises'
+import { execFile, spawn } from 'child_process'
 import { promisify } from 'util'
-import { IPC, AppSettings, RecentProject, UpdateCheckResult } from '../../shared/types'
+import { IPC, AppSettings, RecentProject, UpdateCheckResult, UpdateInstallResult } from '../../shared/types'
 import { store } from '../store'
 
 const execFileAsync = promisify(execFile)
@@ -133,16 +134,55 @@ export function registerSettingsHandlers(): void {
       return {
         currentVersion,
         latestVersion,
+        latestTag: data.tagName,
         hasUpdate: compareVersions(latestVersion, currentVersion) > 0,
         releaseUrl: data.url,
         error: false
       }
     } catch {
-      return { currentVersion, latestVersion: null, hasUpdate: false, releaseUrl: null, error: true }
+      return { currentVersion, latestVersion: null, latestTag: null, hasUpdate: false, releaseUrl: null, error: true }
     }
   })
 
   ipcMain.handle(IPC.APP_OPEN_EXTERNAL, async (_e, url: string) => {
     if (/^https:\/\/github\.com\//.test(url)) await shell.openExternal(url)
+  })
+
+  ipcMain.handle(IPC.APP_INSTALL_UPDATE, async (_e, releaseTag: string): Promise<UpdateInstallResult> => {
+    if (process.platform !== 'win32') {
+      return { ok: false, error: 'Atualização automática só é suportada no Windows.' }
+    }
+    try {
+      const gh = await resolveGhPath()
+      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vibeide-update-'))
+      await execFileAsync(gh, [
+        'release',
+        'download',
+        releaseTag,
+        '--repo',
+        UPDATE_REPO,
+        '--pattern',
+        '*.exe',
+        '--dir',
+        tempDir,
+        '--clobber'
+      ])
+      const files = await fs.readdir(tempDir)
+      const installerName = files.find((f) => f.toLowerCase().endsWith('.exe'))
+      if (!installerName) throw new Error('Instalador não encontrado nos arquivos da release.')
+      const installerPath = path.join(tempDir, installerName)
+      const exePath = app.getPath('exe')
+
+      // The installer can't replace this process's own .exe while it's still running (Windows
+      // file lock), so a detached helper waits for us to fully quit, installs silently, then
+      // relaunches the (now updated) app. Runs independently of our process via detached+unref.
+      const script = `timeout /t 2 /nobreak >nul && "${installerPath}" /S && "${exePath}"`
+      spawn('cmd.exe', ['/c', script], { detached: true, stdio: 'ignore', windowsHide: true }).unref()
+
+      setTimeout(() => app.quit(), 300)
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err) }
+    }
   })
 }

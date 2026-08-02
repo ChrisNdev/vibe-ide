@@ -11,7 +11,8 @@ import {
   FsWatchEvent,
   ProjectGraph,
   FileReadResult,
-  UpdateCheckResult
+  UpdateCheckResult,
+  UpdateInstallResult
 } from '../shared/types'
 
 const api = {
@@ -87,6 +88,8 @@ const api = {
     getVersion: (): Promise<string> => ipcRenderer.invoke(IPC.APP_GET_VERSION),
     getHomeDir: (): Promise<string> => ipcRenderer.invoke(IPC.APP_GET_HOME_DIR),
     checkForUpdate: (): Promise<UpdateCheckResult> => ipcRenderer.invoke(IPC.APP_CHECK_UPDATE),
+    installUpdate: (releaseTag: string): Promise<UpdateInstallResult> =>
+      ipcRenderer.invoke(IPC.APP_INSTALL_UPDATE, releaseTag),
     openExternal: (url: string): Promise<void> => ipcRenderer.invoke(IPC.APP_OPEN_EXTERNAL, url)
   },
   graph: {
