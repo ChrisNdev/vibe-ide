@@ -40,7 +40,10 @@ const api = {
   git: {
     status: (rootPath: string): Promise<GitRepoStatus> => ipcRenderer.invoke(IPC.GIT_STATUS, rootPath),
     diff: (rootPath: string, filePath: string): Promise<string> =>
-      ipcRenderer.invoke(IPC.GIT_DIFF, rootPath, filePath)
+      ipcRenderer.invoke(IPC.GIT_DIFF, rootPath, filePath),
+    commit: (rootPath: string, message: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.GIT_COMMIT, rootPath, message),
+    push: (rootPath: string): Promise<void> => ipcRenderer.invoke(IPC.GIT_PUSH, rootPath)
   },
   pty: {
     spawn: (opts: PtySpawnOptions): Promise<void> => ipcRenderer.invoke(IPC.PTY_SPAWN, opts),

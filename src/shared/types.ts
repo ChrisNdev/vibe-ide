@@ -110,6 +110,8 @@ export const IPC = {
   FS_READ_FILE: 'fs:readFile',
   GIT_STATUS: 'git:status',
   GIT_DIFF: 'git:diff',
+  GIT_COMMIT: 'git:commit',
+  GIT_PUSH: 'git:push',
   PTY_SPAWN: 'pty:spawn',
   PTY_WRITE: 'pty:write',
   PTY_RESIZE: 'pty:resize',

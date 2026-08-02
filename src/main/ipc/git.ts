@@ -52,4 +52,28 @@ export function registerGitHandlers(): void {
       return ''
     }
   })
+
+  // "quick commit": stages everything and commits in one step — errors are left
+  // to throw so the renderer can surface the real git message (e.g. no identity
+  // configured, nothing to commit) instead of a generic failure.
+  ipcMain.handle(IPC.GIT_COMMIT, async (_e, rootPath: string, message: string): Promise<void> => {
+    const git = simpleGit(rootPath)
+    await git.add(['-A'])
+    await git.commit(message)
+  })
+
+  ipcMain.handle(IPC.GIT_PUSH, async (_e, rootPath: string): Promise<void> => {
+    const git = simpleGit(rootPath)
+    try {
+      await git.push()
+    } catch (err) {
+      const status = await git.status()
+      // first push on a new branch has no upstream yet — set one instead of failing
+      if (!status.tracking && status.current) {
+        await git.push(['-u', 'origin', status.current])
+      } else {
+        throw err
+      }
+    }
+  })
 }

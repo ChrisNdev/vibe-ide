@@ -15,6 +15,7 @@ import { useExplorerStore } from '@renderer/store/explorerStore'
 import TreeNode, { type CreatingState } from './TreeNode'
 import ContextMenu, { type ContextMenuItem } from './ContextMenu'
 import InlineInput from './InlineInput'
+import CommitBar from './CommitBar'
 import { basename, dirname, join } from './pathUtils'
 
 interface MenuState {
@@ -195,6 +196,8 @@ export default function FileExplorer(): JSX.Element {
           onClose={() => setMenu(null)}
         />
       )}
+
+      <CommitBar />
     </div>
   )
 }

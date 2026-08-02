@@ -12,6 +12,10 @@ interface ExplorerState {
   previewPath: string | null
   gitStatus: GitStatusMap
   dirtyDirs: Set<string>
+  isGitRepo: boolean
+  gitBranch: string | null
+  gitAhead: number
+  gitBehind: number
 
   setRoot: (root: string) => Promise<void>
   toggleExpand: (dirPath: string) => void
@@ -48,6 +52,10 @@ export const useExplorerStore = create<ExplorerState>((set, get) => ({
   previewPath: null,
   gitStatus: {},
   dirtyDirs: new Set(),
+  isGitRepo: false,
+  gitBranch: null,
+  gitAhead: 0,
+  gitBehind: 0,
 
   setRoot: async (root) => {
     const prevRoot = get().rootPath
@@ -59,7 +67,11 @@ export const useExplorerStore = create<ExplorerState>((set, get) => ({
       selectedPath: null,
       previewPath: null,
       gitStatus: {},
-      dirtyDirs: new Set()
+      dirtyDirs: new Set(),
+      isGitRepo: false,
+      gitBranch: null,
+      gitAhead: 0,
+      gitBehind: 0
     })
     await window.api.fs.watch(root)
     await get().loadDir(root)
@@ -113,7 +125,14 @@ export const useExplorerStore = create<ExplorerState>((set, get) => ({
     try {
       const result = await window.api.git.status(root)
       const dirtyDirs = computeDirtyDirs(root, result.files)
-      set({ gitStatus: result.files, dirtyDirs })
+      set({
+        gitStatus: result.files,
+        dirtyDirs,
+        isGitRepo: result.isRepo,
+        gitBranch: result.branch,
+        gitAhead: result.ahead,
+        gitBehind: result.behind
+      })
     } catch {
       // not a repo or git unavailable — leave status empty
     }
