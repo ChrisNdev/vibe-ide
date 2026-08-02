@@ -4,6 +4,16 @@ Cockpit desktop para rodar o [Claude Code](https://claude.com/claude-code): expl
 
 Feito com Electron + React + TypeScript.
 
+## Instalação (Windows)
+
+A forma mais fácil: baixe o instalador pronto, sem precisar clonar nada.
+
+**[⬇ Baixar Claude IDE-Setup-1.0.0.exe](https://github.com/ChrisNdev/claude-ide/releases/latest/download/Claude.IDE-Setup-1.0.0.exe)**
+
+Execute o `.exe`, escolha a pasta de instalação e pronto — cria atalho na área de trabalho e no menu iniciar. (O Windows pode avisar "Editor desconhecido" por não ser assinado digitalmente; clique em "Mais informações" → "Executar assim mesmo".)
+
+Todas as versões: [github.com/ChrisNdev/claude-ide/releases](https://github.com/ChrisNdev/claude-ide/releases)
+
 ## Recursos
 
 - **Explorador de arquivos** — árvore de diretórios com carregamento sob demanda, status de git por arquivo (modificado/staged/novo/etc.), criar/renomear/duplicar/mover/excluir, tudo com atualização automática via `chokidar`.
@@ -12,9 +22,9 @@ Feito com Electron + React + TypeScript.
 - **Visualizador local (Preview)** — clique num arquivo no explorador e o conteúdo aparece com numeração de linha e realce de sintaxe (TS/TSX/JS/JSX/JSON/CSS/HTML/Python/YAML/Bash/Markdown), lido direto do disco. Mostra tamanho e estimativa de tokens, e tem um toggle pra ver o diff do arquivo contra o HEAD (via `simple-git`) — nada disso passa pelo Claude.
 - **Commit rápido** — barra fixa no rodapé do explorador com a branch atual, contadores de commits à frente/atrás do remoto, caixa de mensagem (`Ctrl+Enter` para commitar) e botão de push, sem precisar abrir o terminal.
 
-## Rodando localmente
+## Rodando a partir do código-fonte
 
-Pré-requisitos: [Node.js](https://nodejs.org) 18+ e o [Claude Code CLI](https://claude.com/claude-code) instalado (é o que o terminal já abre rodando).
+Pra quem quer mexer no código em vez de só usar o instalador. Pré-requisitos: [Node.js](https://nodejs.org) 18+ e o [Claude Code CLI](https://claude.com/claude-code) instalado (é o que o terminal já abre rodando).
 
 ```bash
 npm install
