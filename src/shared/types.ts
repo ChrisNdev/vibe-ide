@@ -94,6 +94,15 @@ export interface ProjectGraph {
   truncated: boolean
 }
 
+export interface UpdateCheckResult {
+  currentVersion: string
+  latestVersion: string | null
+  hasUpdate: boolean
+  releaseUrl: string | null
+  /** the gh CLI wasn't found, isn't logged in, or the check failed for another reason */
+  error: boolean
+}
+
 export const IPC = {
   DIALOG_OPEN_FOLDER: 'dialog:openFolder',
   FS_READ_DIR: 'fs:readDir',
@@ -129,5 +138,7 @@ export const IPC = {
   CLIPBOARD_WRITE: 'clipboard:write',
   APP_GET_VERSION: 'app:getVersion',
   APP_GET_HOME_DIR: 'app:getHomeDir',
+  APP_CHECK_UPDATE: 'app:checkUpdate',
+  APP_OPEN_EXTERNAL: 'app:openExternal',
   GRAPH_BUILD: 'graph:build'
 } as const

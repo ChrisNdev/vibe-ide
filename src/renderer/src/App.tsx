@@ -5,6 +5,7 @@ import FileExplorer from './components/Explorer/FileExplorer'
 import MindMap from './components/MindMap/MindMap'
 import PreviewPane from './components/Preview/PreviewPane'
 import WelcomeScreen from './components/Welcome/WelcomeScreen'
+import UpdateChecker from './components/UpdateChecker/UpdateChecker'
 import { useTerminalStore, nextTerminalId } from './store/terminalStore'
 import { useExplorerStore } from './store/explorerStore'
 
@@ -138,6 +139,8 @@ export default function App(): JSX.Element {
           >
             <Eye size={14} />
           </button>
+          <div className="flex-1" />
+          <UpdateChecker />
         </div>
         <div className="min-h-0 flex-1 overflow-hidden">
           {tabs.map((tab) => (

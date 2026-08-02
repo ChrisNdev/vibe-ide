@@ -1,13 +1,39 @@
-import { ipcMain, app } from 'electron'
+import { ipcMain, app, shell } from 'electron'
 import path from 'path'
 import os from 'os'
 import fsSync from 'fs'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
-import { IPC, AppSettings, RecentProject } from '../../shared/types'
+import { IPC, AppSettings, RecentProject, UpdateCheckResult } from '../../shared/types'
 import { store } from '../store'
 
 const execFileAsync = promisify(execFile)
+
+/** GitHub repo this app publishes releases to — used by the in-app update check. */
+const UPDATE_REPO = 'ChrisNdev/vibe-ide'
+
+/** Resolves the gh CLI: PATH first, then the known install spot from this project's own setup script. */
+async function resolveGhPath(): Promise<string> {
+  try {
+    await execFileAsync('gh', ['--version'])
+    return 'gh'
+  } catch {
+    const fallback = path.join(os.homedir(), 'AppData', 'Local', 'gh-cli', 'bin', 'gh.exe')
+    if (fsSync.existsSync(fallback)) return fallback
+    throw new Error('gh CLI not found')
+  }
+}
+
+/** Simple dotted-numeric version compare — good enough for this app's x.y.z tags. */
+function compareVersions(a: string, b: string): number {
+  const pa = a.split('.').map(Number)
+  const pb = b.split('.').map(Number)
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const diff = (pa[i] || 0) - (pb[i] || 0)
+    if (diff !== 0) return diff
+  }
+  return 0
+}
 
 export function registerSettingsHandlers(): void {
   ipcMain.handle(IPC.SETTINGS_GET, async (): Promise<AppSettings> => {
@@ -88,5 +114,35 @@ export function registerSettingsHandlers(): void {
 
   ipcMain.handle(IPC.APP_GET_HOME_DIR, async () => {
     return os.homedir()
+  })
+
+  ipcMain.handle(IPC.APP_CHECK_UPDATE, async (): Promise<UpdateCheckResult> => {
+    const currentVersion = app.getVersion()
+    try {
+      const gh = await resolveGhPath()
+      const { stdout } = await execFileAsync(gh, [
+        'release',
+        'view',
+        '--repo',
+        UPDATE_REPO,
+        '--json',
+        'tagName,url'
+      ])
+      const data = JSON.parse(stdout) as { tagName: string; url: string }
+      const latestVersion = data.tagName.replace(/^v/, '')
+      return {
+        currentVersion,
+        latestVersion,
+        hasUpdate: compareVersions(latestVersion, currentVersion) > 0,
+        releaseUrl: data.url,
+        error: false
+      }
+    } catch {
+      return { currentVersion, latestVersion: null, hasUpdate: false, releaseUrl: null, error: true }
+    }
+  })
+
+  ipcMain.handle(IPC.APP_OPEN_EXTERNAL, async (_e, url: string) => {
+    if (/^https:\/\/github\.com\//.test(url)) await shell.openExternal(url)
   })
 }
