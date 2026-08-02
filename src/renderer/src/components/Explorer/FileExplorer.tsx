@@ -38,14 +38,6 @@ export default function FileExplorer(): JSX.Element {
   const [creatingRoot, setCreatingRoot] = useState<'file' | 'dir' | null>(null)
 
   useEffect(() => {
-    ;(async () => {
-      const home = await window.api.app.getHomeDir()
-      await setRoot(home)
-    })()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
     const off = window.api.fs.onEvent((evt) => handleFsEvent(evt.path))
     return off
   }, [handleFsEvent])

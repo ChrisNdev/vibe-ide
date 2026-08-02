@@ -4,6 +4,7 @@ import TerminalPane from './components/Terminal/Terminal'
 import FileExplorer from './components/Explorer/FileExplorer'
 import MindMap from './components/MindMap/MindMap'
 import PreviewPane from './components/Preview/PreviewPane'
+import WelcomeScreen from './components/Welcome/WelcomeScreen'
 import { useTerminalStore, nextTerminalId } from './store/terminalStore'
 import { useExplorerStore } from './store/explorerStore'
 
@@ -17,6 +18,7 @@ export default function App(): JSX.Element {
   const activeTabId = useTerminalStore((s) => s.activeTabId)
   const addTab = useTerminalStore((s) => s.addTab)
   const rootPath = useExplorerStore((s) => s.rootPath)
+  const setRoot = useExplorerStore((s) => s.setRoot)
   const [ready, setReady] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(280)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -26,26 +28,33 @@ export default function App(): JSX.Element {
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const [home, settings] = await Promise.all([window.api.app.getHomeDir(), window.api.settings.get()])
+      const settings = await window.api.settings.get()
       if (cancelled) return
       setSidebarWidth(settings.sidebarWidth)
       setSidebarCollapsed(settings.sidebarCollapsed)
+      setReady(true)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const openProject = useCallback(
+    async (path: string): Promise<void> => {
+      await setRoot(path)
+      void window.api.recents.add(path)
       addTab({
         id: nextTerminalId(),
-        cwd: home,
+        cwd: path,
         title: 'claude',
         kind: 'claude',
         shellId: null,
         isRunning: true,
         exitCode: null
       })
-      setReady(true)
-    })()
-    return () => {
-      cancelled = true
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    },
+    [setRoot, addTab]
+  )
 
   const toggleSidebar = (): void => {
     const next = !sidebarCollapsed
@@ -79,6 +88,10 @@ export default function App(): JSX.Element {
         <span className="font-mono text-xs text-base-400">iniciando…</span>
       </div>
     )
+  }
+
+  if (!rootPath) {
+    return <WelcomeScreen onOpen={openProject} />
   }
 
   return (
