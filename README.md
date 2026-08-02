@@ -1,4 +1,4 @@
-# Claude IDE
+# vibeIDE
 
 Cockpit desktop para rodar o [Claude Code](https://claude.com/claude-code): explorador de arquivos, terminal real e algumas ferramentas que evitam gastar tokens de IA em coisas que dá pra resolver localmente — ver o mapa do projeto, ler um arquivo, ver um diff, dar commit.
 
@@ -8,11 +8,9 @@ Feito com Electron + React + TypeScript.
 
 A forma mais fácil: baixe o instalador pronto, sem precisar clonar nada.
 
-**[⬇ Baixar Claude IDE-Setup-1.0.0.exe](https://github.com/ChrisNdev/claude-ide/releases/latest/download/Claude.IDE-Setup-1.0.0.exe)**
+**[⬇ Baixar a última versão](https://github.com/ChrisNdev/vibe-ide/releases/latest)** — pegue o `vibeIDE-Setup-x.x.x.exe` nos assets da release.
 
 Execute o `.exe`, escolha a pasta de instalação e pronto — cria atalho na área de trabalho e no menu iniciar. (O Windows pode avisar "Editor desconhecido" por não ser assinado digitalmente; clique em "Mais informações" → "Executar assim mesmo".)
-
-Todas as versões: [github.com/ChrisNdev/claude-ide/releases](https://github.com/ChrisNdev/claude-ide/releases)
 
 ## Recursos
 

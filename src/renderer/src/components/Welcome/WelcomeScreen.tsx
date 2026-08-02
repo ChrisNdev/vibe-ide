@@ -55,7 +55,7 @@ export default function WelcomeScreen({ onOpen }: WelcomeScreenProps): JSX.Eleme
       <div className="w-full max-w-md px-6">
         <div className="mb-8 flex flex-col items-center text-center">
           <Waypoints size={28} className="mb-3 text-accent" />
-          <h1 className="text-lg font-semibold text-base-100">Claude IDE</h1>
+          <h1 className="text-lg font-semibold text-base-100">vibeIDE</h1>
           <p className="mt-1 text-xs text-base-400">Escolha uma pasta de projeto pra começar</p>
         </div>
 

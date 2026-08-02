@@ -1,6 +1,6 @@
 {
-  "name": "claude-ide",
-  "version": "1.0.0",
+  "name": "vibe-ide",
+  "version": "1.1.0",
   "description": "Cockpit desktop para rodar o Claude Code — explorador de arquivos + terminal real",
   "main": "./out/main/index.js",
   "author": "Christian",

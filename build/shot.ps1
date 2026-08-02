@@ -1,5 +1,5 @@
 param(
-  [string]$OutPath = "$env:TEMP\claude-ide-shot.png"
+  [string]$OutPath = "$env:TEMP\vibe-ide-shot.png"
 )
 
 Add-Type -AssemblyName System.Drawing
@@ -15,7 +15,7 @@ public class Win32 {
 }
 "@
 
-$proc = Get-Process -Name "claude-ide" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+$proc = Get-Process -Name "vibe-ide" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
 if (-not $proc) { Write-Output "NO_WINDOW"; exit 1 }
 
 $hwnd = $proc.MainWindowHandle

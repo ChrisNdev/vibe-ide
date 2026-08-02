@@ -1,11 +1,11 @@
-appId: com.christian.claudeide
-productName: Claude IDE
+appId: com.christian.vibeide
+productName: vibeIDE
 directories:
   buildResources: build
 asarUnpack:
   - '**/node_modules/@homebridge/node-pty-prebuilt-multiarch/**/*'
 win:
-  executableName: claude-ide
+  executableName: vibe-ide
   target:
     - target: nsis
       arch:
@@ -16,6 +16,6 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: always
   createStartMenuShortcut: true
-  shortcutName: Claude IDE
-  uninstallDisplayName: Claude IDE
+  shortcutName: vibeIDE
+  uninstallDisplayName: vibeIDE
   artifactName: ${productName}-Setup-${version}.${ext}
