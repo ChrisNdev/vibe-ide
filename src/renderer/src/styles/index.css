@@ -1,0 +1,97 @@
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/700.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-base-700/60;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    @apply bg-base-900 text-base-200 font-sans antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: theme('colors.base.600');
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: theme('colors.base.500');
+  }
+}
+
+@layer utilities {
+  .app-drag {
+    -webkit-app-region: drag;
+  }
+  .app-no-drag {
+    -webkit-app-region: no-drag;
+  }
+}
+
+/* Preview pane syntax colors — no stock Prism theme is imported, so these are
+   defined directly against the app's own dark palette (One Dark-ish hues). */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #6b6b76;
+  font-style: italic;
+}
+.token.string,
+.token.attr-value {
+  color: #98c379;
+}
+.token.number,
+.token.boolean,
+.token.constant {
+  color: #d19a66;
+}
+.token.keyword,
+.token.selector,
+.token.important {
+  color: #c678dd;
+}
+.token.function,
+.token.class-name {
+  color: #61afef;
+}
+.token.tag,
+.token.builtin {
+  color: #e5c07b;
+}
+.token.operator,
+.token.punctuation,
+.token.property {
+  color: #9a9aa4;
+}
+.token.deleted {
+  color: #e5484d;
+}
+.token.inserted {
+  color: #39d98a;
+}

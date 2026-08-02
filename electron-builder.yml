@@ -1,0 +1,21 @@
+appId: com.christian.claudeide
+productName: Claude IDE
+directories:
+  buildResources: build
+asarUnpack:
+  - '**/node_modules/@homebridge/node-pty-prebuilt-multiarch/**/*'
+win:
+  executableName: claude-ide
+  target:
+    - target: nsis
+      arch:
+        - x64
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: Claude IDE
+  uninstallDisplayName: Claude IDE
+  artifactName: ${productName}-Setup-${version}.${ext}

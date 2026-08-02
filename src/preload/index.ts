@@ -1,0 +1,93 @@
+import { contextBridge, ipcRenderer } from 'electron'
+import {
+  IPC,
+  FileEntry,
+  GitRepoStatus,
+  PtySpawnOptions,
+  PtyExitEvent,
+  ShellInfo,
+  AppSettings,
+  RecentProject,
+  FsWatchEvent,
+  ProjectGraph,
+  FileReadResult
+} from '../shared/types'
+
+const api = {
+  dialog: {
+    openFolder: (): Promise<string | null> => ipcRenderer.invoke(IPC.DIALOG_OPEN_FOLDER)
+  },
+  fs: {
+    readDir: (dirPath: string): Promise<FileEntry[]> => ipcRenderer.invoke(IPC.FS_READ_DIR, dirPath),
+    createFile: (filePath: string): Promise<void> => ipcRenderer.invoke(IPC.FS_CREATE_FILE, filePath),
+    createDir: (dirPath: string): Promise<void> => ipcRenderer.invoke(IPC.FS_CREATE_DIR, dirPath),
+    rename: (oldPath: string, newPath: string): Promise<void> =>
+      ipcRenderer.invoke(IPC.FS_RENAME, oldPath, newPath),
+    delete: (targetPath: string): Promise<void> => ipcRenderer.invoke(IPC.FS_DELETE, targetPath),
+    duplicate: (sourcePath: string): Promise<string> => ipcRenderer.invoke(IPC.FS_DUPLICATE, sourcePath),
+    move: (sourcePath: string, destDir: string): Promise<string> =>
+      ipcRenderer.invoke(IPC.FS_MOVE, sourcePath, destDir),
+    reveal: (targetPath: string): Promise<void> => ipcRenderer.invoke(IPC.FS_REVEAL, targetPath),
+    watch: (rootPath: string): Promise<void> => ipcRenderer.invoke(IPC.FS_WATCH, rootPath),
+    unwatch: (rootPath: string): Promise<void> => ipcRenderer.invoke(IPC.FS_UNWATCH, rootPath),
+    onEvent: (cb: (evt: FsWatchEvent) => void): (() => void) => {
+      const listener = (_e: Electron.IpcRendererEvent, evt: FsWatchEvent): void => cb(evt)
+      ipcRenderer.on(IPC.FS_EVENT, listener)
+      return () => ipcRenderer.removeListener(IPC.FS_EVENT, listener)
+    },
+    readFile: (filePath: string): Promise<FileReadResult> => ipcRenderer.invoke(IPC.FS_READ_FILE, filePath)
+  },
+  git: {
+    status: (rootPath: string): Promise<GitRepoStatus> => ipcRenderer.invoke(IPC.GIT_STATUS, rootPath),
+    diff: (rootPath: string, filePath: string): Promise<string> =>
+      ipcRenderer.invoke(IPC.GIT_DIFF, rootPath, filePath)
+  },
+  pty: {
+    spawn: (opts: PtySpawnOptions): Promise<void> => ipcRenderer.invoke(IPC.PTY_SPAWN, opts),
+    write: (id: string, data: string): Promise<void> => ipcRenderer.invoke(IPC.PTY_WRITE, id, data),
+    resize: (id: string, cols: number, rows: number): Promise<void> =>
+      ipcRenderer.invoke(IPC.PTY_RESIZE, id, cols, rows),
+    kill: (id: string): Promise<void> => ipcRenderer.invoke(IPC.PTY_KILL, id),
+    onData: (cb: (id: string, data: string) => void): (() => void) => {
+      const listener = (_e: Electron.IpcRendererEvent, payload: { id: string; data: string }): void =>
+        cb(payload.id, payload.data)
+      ipcRenderer.on(IPC.PTY_DATA, listener)
+      return () => ipcRenderer.removeListener(IPC.PTY_DATA, listener)
+    },
+    onExit: (cb: (evt: PtyExitEvent) => void): (() => void) => {
+      const listener = (_e: Electron.IpcRendererEvent, evt: PtyExitEvent): void => cb(evt)
+      ipcRenderer.on(IPC.PTY_EXIT, listener)
+      return () => ipcRenderer.removeListener(IPC.PTY_EXIT, listener)
+    }
+  },
+  shells: {
+    detect: (): Promise<ShellInfo[]> => ipcRenderer.invoke(IPC.SHELLS_DETECT)
+  },
+  claude: {
+    detect: (): Promise<string | null> => ipcRenderer.invoke(IPC.CLAUDE_DETECT)
+  },
+  settings: {
+    get: (): Promise<AppSettings> => ipcRenderer.invoke(IPC.SETTINGS_GET),
+    set: (partial: Partial<AppSettings>): Promise<AppSettings> => ipcRenderer.invoke(IPC.SETTINGS_SET, partial)
+  },
+  recents: {
+    get: (): Promise<RecentProject[]> => ipcRenderer.invoke(IPC.RECENTS_GET),
+    add: (path: string): Promise<RecentProject[]> => ipcRenderer.invoke(IPC.RECENTS_ADD, path),
+    remove: (path: string): Promise<RecentProject[]> => ipcRenderer.invoke(IPC.RECENTS_REMOVE, path),
+    togglePin: (path: string): Promise<RecentProject[]> => ipcRenderer.invoke(IPC.RECENTS_TOGGLE_PIN, path)
+  },
+  clipboard: {
+    writeText: (text: string): Promise<void> => ipcRenderer.invoke(IPC.CLIPBOARD_WRITE, text)
+  },
+  app: {
+    getVersion: (): Promise<string> => ipcRenderer.invoke(IPC.APP_GET_VERSION),
+    getHomeDir: (): Promise<string> => ipcRenderer.invoke(IPC.APP_GET_HOME_DIR)
+  },
+  graph: {
+    build: (rootPath: string): Promise<ProjectGraph> => ipcRenderer.invoke(IPC.GRAPH_BUILD, rootPath)
+  }
+}
+
+contextBridge.exposeInMainWorld('api', api)
+
+export type Api = typeof api
