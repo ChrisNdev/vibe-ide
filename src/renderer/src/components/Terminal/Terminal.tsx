@@ -61,6 +61,7 @@ export default function TerminalPane({
 
   useEffect(() => {
     if (!containerRef.current) return
+    let disposed = false
 
     const term = new XTerm({
       fontFamily: '"JetBrains Mono", ui-monospace, monospace',
@@ -80,8 +81,17 @@ export default function TerminalPane({
     term.loadAddon(new WebLinksAddon())
 
     term.open(containerRef.current)
-    loadFastestRenderer(term)
+    // fit() must run first so the terminal has real character/dimension
+    // measurements before a GPU renderer addon attaches — loading WebGL/Canvas
+    // before that leaves them reading undefined dimensions and throwing.
     fitAddon.fit()
+    // Deferred + disposed-guarded: React StrictMode double-invokes this effect
+    // in dev (mount → cleanup → mount), and the WebGL addon keeps an async
+    // render loop running — without this guard, the throwaway first instance's
+    // loop can fire after its own disposal and throw reading a torn-down core.
+    requestAnimationFrame(() => {
+      if (!disposed) loadFastestRenderer(term)
+    })
 
     xtermRef.current = term
     fitAddonRef.current = fitAddon
@@ -123,6 +133,7 @@ export default function TerminalPane({
     resizeObserver.observe(containerRef.current)
 
     return () => {
+      disposed = true
       resizeObserver.disconnect()
       dataDisposable.dispose()
       offData()
