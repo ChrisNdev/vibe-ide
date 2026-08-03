@@ -3,7 +3,7 @@ import fs from 'fs/promises'
 import fsSync from 'fs'
 import path from 'path'
 import { IPC, FileEntry, FileReadResult } from '../../shared/types'
-import { watchPath, unwatchPath } from '../file-watcher'
+import { watchPath, unwatchPath, getWorkspaceRoot } from '../file-watcher'
 
 /** Above this, we don't even try to read the file into the preview pane — avoids choking the renderer on huge assets/logs. */
 const MAX_PREVIEW_SIZE = 2 * 1024 * 1024
@@ -14,6 +14,23 @@ function looksBinary(buffer: Buffer): boolean {
     if (buffer[i] === 0) return true
   }
   return false
+}
+
+/**
+ * Every fs handler below is reachable from the renderer over IPC, so a path
+ * must never be trusted as-is — resolve it and reject anything that escapes
+ * the currently opened workspace root (INVARIANTES: Segurança).
+ */
+function assertInWorkspace(target: string): string {
+  const root = getWorkspaceRoot()
+  if (!root) throw new Error('No workspace root is open')
+  const resolvedRoot = path.resolve(root)
+  const resolved = path.resolve(target)
+  const rel = path.relative(resolvedRoot, resolved)
+  if (rel !== '' && (rel.startsWith('..') || path.isAbsolute(rel))) {
+    throw new Error('Path escapes workspace root')
+  }
+  return resolved
 }
 
 export function registerFsHandlers(): void {
@@ -28,6 +45,7 @@ export function registerFsHandlers(): void {
   })
 
   ipcMain.handle(IPC.FS_READ_DIR, async (_e, dirPath: string): Promise<FileEntry[]> => {
+    dirPath = assertInWorkspace(dirPath)
     const entries = await fs.readdir(dirPath, { withFileTypes: true })
     const mapped = entries.map((entry) => ({
       name: entry.name,
@@ -43,23 +61,29 @@ export function registerFsHandlers(): void {
   })
 
   ipcMain.handle(IPC.FS_CREATE_FILE, async (_e, filePath: string) => {
+    filePath = assertInWorkspace(filePath)
     const handle = await fs.open(filePath, 'wx')
     await handle.close()
   })
 
   ipcMain.handle(IPC.FS_CREATE_DIR, async (_e, dirPath: string) => {
+    dirPath = assertInWorkspace(dirPath)
     await fs.mkdir(dirPath, { recursive: false })
   })
 
   ipcMain.handle(IPC.FS_RENAME, async (_e, oldPath: string, newPath: string) => {
+    oldPath = assertInWorkspace(oldPath)
+    newPath = assertInWorkspace(newPath)
     await fs.rename(oldPath, newPath)
   })
 
   ipcMain.handle(IPC.FS_DELETE, async (_e, targetPath: string) => {
+    targetPath = assertInWorkspace(targetPath)
     await shell.trashItem(targetPath)
   })
 
   ipcMain.handle(IPC.FS_DUPLICATE, async (_e, sourcePath: string) => {
+    sourcePath = assertInWorkspace(sourcePath)
     const dir = path.dirname(sourcePath)
     const ext = path.extname(sourcePath)
     const base = path.basename(sourcePath, ext)
@@ -79,12 +103,15 @@ export function registerFsHandlers(): void {
   })
 
   ipcMain.handle(IPC.FS_MOVE, async (_e, sourcePath: string, destDir: string) => {
+    sourcePath = assertInWorkspace(sourcePath)
+    destDir = assertInWorkspace(destDir)
     const dest = path.join(destDir, path.basename(sourcePath))
     await fs.rename(sourcePath, dest)
     return dest
   })
 
   ipcMain.handle(IPC.FS_REVEAL, async (_e, targetPath: string) => {
+    targetPath = assertInWorkspace(targetPath)
     shell.showItemInFolder(targetPath)
   })
 
@@ -103,6 +130,7 @@ export function registerFsHandlers(): void {
 
   ipcMain.handle(IPC.FS_READ_FILE, async (_e, filePath: string): Promise<FileReadResult> => {
     try {
+      filePath = assertInWorkspace(filePath)
       const stat = await fs.stat(filePath)
       if (stat.size > MAX_PREVIEW_SIZE) {
         return { content: '', size: stat.size, truncated: true, binary: false }

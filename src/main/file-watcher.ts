@@ -4,6 +4,13 @@ import { IPC, FsWatchEvent } from '../shared/types'
 
 const watchers = new Map<string, FSWatcher>()
 
+/** The single project root currently opened in the renderer — set when it starts being watched, used by fs IPC handlers to reject paths outside it. */
+let activeRoot: string | null = null
+
+export function getWorkspaceRoot(): string | null {
+  return activeRoot
+}
+
 const IGNORED = [
   '**/node_modules/**',
   '**/.git/**',
@@ -16,6 +23,7 @@ const IGNORED = [
 
 export function watchPath(win: BrowserWindow, rootPath: string): void {
   unwatchPath(rootPath)
+  activeRoot = rootPath
 
   const watcher = chokidar.watch(rootPath, {
     ignored: IGNORED,
@@ -49,6 +57,7 @@ export function unwatchPath(rootPath: string): void {
     w.close()
     watchers.delete(rootPath)
   }
+  if (activeRoot === rootPath) activeRoot = null
 }
 
 export function unwatchAll(): void {
