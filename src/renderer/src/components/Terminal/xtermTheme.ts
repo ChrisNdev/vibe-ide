@@ -1,10 +1,14 @@
 import type { ITheme } from '@xterm/xterm'
 
+// background/cursorAccent match --substrate from styles/tokens.css (xterm needs a literal
+// hex, it can't read CSS custom properties). Everything else — foreground, cursor, and the
+// 16 ANSI slots — carries shell-output meaning (git status colors, ls --color, etc.) and is
+// intentionally left alone: the WebGL terminal renderer is protected by INVARIANTES.
 export const xtermTheme: ITheme = {
-  background: '#0d0d0f',
+  background: '#141210',
   foreground: '#c4c4cc',
   cursor: '#39d98a',
-  cursorAccent: '#0d0d0f',
+  cursorAccent: '#141210',
   selectionBackground: 'rgba(57, 217, 138, 0.25)',
   black: '#18181c',
   red: '#e5484d',

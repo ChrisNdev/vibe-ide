@@ -58,13 +58,13 @@ export default function CommitBar(): JSX.Element | null {
       <div className="mb-1.5 flex items-center gap-2 text-[11px] text-base-400">
         <span className="truncate font-medium text-base-300">{gitBranch ?? '—'}</span>
         {gitAhead > 0 && (
-          <span className="flex items-center gap-0.5 text-accent">
+          <span className="flex items-center gap-0.5 tabular-nums text-accent">
             <ArrowUp size={11} />
             {gitAhead}
           </span>
         )}
         {gitBehind > 0 && (
-          <span className="flex items-center gap-0.5 text-warn">
+          <span className="flex items-center gap-0.5 tabular-nums text-warn">
             <ArrowDown size={11} />
             {gitBehind}
           </span>
@@ -96,7 +96,7 @@ export default function CommitBar(): JSX.Element | null {
             }}
             placeholder={`Mensagem do commit (Ctrl+Enter) — inclui as ${changedCount} alterações`}
             rows={2}
-            className="w-full resize-none rounded border border-base-700/60 bg-base-900 px-2 py-1 text-[12px] text-base-100 outline-none focus:border-accent"
+            className="w-full resize-none rounded border border-base-700/60 bg-base-900 px-2 py-1 text-[12px] text-base-100 outline-none focus:border-ink-yellow"
           />
           <button
             className="flex items-center justify-center gap-1.5 rounded bg-accent px-2 py-1 text-[12px] font-medium text-base-950 hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-40"

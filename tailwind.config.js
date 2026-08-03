@@ -26,18 +26,38 @@ export default {
           muted: 'rgba(57, 217, 138, 0.12)'
         },
         danger: '#e5484d',
-        warn: '#f5a623'
+        warn: '#f5a623',
+
+        // Sistema de design CMYK (docs/PLANO.md → SISTEMA DE DESIGN), lido de src/renderer/src/styles/tokens.css
+        substrate: 'var(--substrate)',
+        panel: 'var(--panel)',
+        rule: 'var(--rule)',
+        paper: 'var(--paper)',
+        muted: 'var(--muted)',
+        ink: {
+          cyan: 'var(--ink-cyan)',
+          magenta: 'var(--ink-magenta)',
+          yellow: 'var(--ink-yellow)',
+          overprint: 'var(--ink-overprint)'
+        }
       },
       fontFamily: {
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
+        mono: ['"Commit Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        sans: ['Archivo', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Archivo Expanded"', 'Archivo', 'ui-sans-serif', 'system-ui', 'sans-serif']
       },
       transitionDuration: {
         150: '150ms'
       },
+      // Regra dura do sistema de design: zero box-shadow, profundidade é degrau de valor + fio de 1px.
       boxShadow: {
-        panel: '0 0 0 1px rgba(255,255,255,0.04)',
-        popover: '0 8px 24px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06)'
+        panel: 'none',
+        popover: 'none'
+      },
+      borderRadius: {
+        sm: '2px',
+        DEFAULT: '3px',
+        md: '3px'
       },
       keyframes: {
         'fade-in': { from: { opacity: 0 }, to: { opacity: 1 } },

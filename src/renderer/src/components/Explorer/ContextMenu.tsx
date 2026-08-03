@@ -40,7 +40,7 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps):
   return (
     <div
       ref={ref}
-      className="fixed z-50 min-w-[180px] rounded-md bg-base-800 py-1 text-sm text-base-200 shadow-popover animate-fade-in"
+      className="fixed z-50 min-w-[180px] rounded-md border border-rule bg-base-800 py-1 text-sm text-base-200 animate-fade-in"
       style={{ left: Math.max(4, clampedX), top: Math.max(4, clampedY) }}
     >
       {items.map((item, i) => (

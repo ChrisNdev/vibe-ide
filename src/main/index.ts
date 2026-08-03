@@ -17,12 +17,14 @@ function createWindow(): BrowserWindow {
     minWidth: 960,
     minHeight: 600,
     show: false,
-    backgroundColor: '#0d0d0f',
+    // Mirrors --substrate / --muted from src/renderer/src/styles/tokens.css — the main
+    // process can't read a CSS custom property, so the token's literal value lives here too.
+    backgroundColor: '#141210',
     autoHideMenuBar: true,
     titleBarStyle: 'hidden',
     titleBarOverlay: {
-      color: '#0d0d0f',
-      symbolColor: '#9a9aa4',
+      color: '#141210',
+      symbolColor: '#8a8378',
       height: 36
     },
     webPreferences: {

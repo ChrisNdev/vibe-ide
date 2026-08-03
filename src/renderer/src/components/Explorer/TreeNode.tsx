@@ -1,7 +1,7 @@
 import { ChevronRight, ChevronDown, Folder, FolderOpen, Circle } from 'lucide-react'
 import type { FileEntry, GitFileStatus } from '@shared/types'
 import { useExplorerStore } from '@renderer/store/explorerStore'
-import { iconForFile } from './fileIcons'
+import FileTypeTag from './FileTypeTag'
 import { join } from './pathUtils'
 import InlineInput from './InlineInput'
 
@@ -81,7 +81,7 @@ export default function TreeNode(props: TreeNodeProps): JSX.Element {
     )
   }
 
-  const Icon = entry.isDirectory ? (expanded ? FolderOpen : Folder) : iconForFile(entry.name)
+  const DirIcon = expanded ? FolderOpen : Folder
 
   return (
     <div>
@@ -95,7 +95,7 @@ export default function TreeNode(props: TreeNodeProps): JSX.Element {
           setSelected(entry.path)
           onContextMenu(e, entry)
         }}
-        className={`group flex cursor-default items-center gap-1.5 rounded-sm py-[3px] pr-2 text-[13px] leading-5 ${
+        className={`group flex h-[22px] cursor-default items-center gap-1.5 rounded-sm pr-2 text-[13px] ${
           selected ? 'bg-accent-muted text-base-100' : 'hover:bg-base-800/70 text-base-200'
         }`}
         style={{ paddingLeft: indent }}
@@ -109,10 +109,11 @@ export default function TreeNode(props: TreeNodeProps): JSX.Element {
         ) : (
           <span className="w-[13px] shrink-0" />
         )}
-        <Icon
-          size={14}
-          className={`shrink-0 ${entry.isDirectory ? 'text-base-300' : 'text-base-400'}`}
-        />
+        {entry.isDirectory ? (
+          <DirIcon size={14} className="shrink-0 text-base-300" />
+        ) : (
+          <FileTypeTag name={entry.name} />
+        )}
         <span className={`truncate ${statusClass(status)}`}>{entry.name}</span>
         {entry.isDirectory && dirty && !expanded && (
           <Circle size={5} className="ml-auto shrink-0 fill-warn text-warn" />

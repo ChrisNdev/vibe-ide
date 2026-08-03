@@ -1,0 +1,70 @@
+/**
+ * Design tokens — "console de máquina impressora flexográfica".
+ * See docs/PLANO.md → SISTEMA DE DESIGN for the rationale.
+ *
+ * Fonts are self-hosted (no CDN): Archivo is Google Fonts' variable file
+ * (weight 100–900) reused for both the UI voice (default width) and the
+ * display voice (Archivo Expanded, pinned to weight 900 / stretch 125%).
+ * Commit Mono ships its own static regular/bold woff2 files.
+ */
+
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../assets/fonts/archivo-variable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Archivo Expanded';
+  font-style: normal;
+  font-weight: 900;
+  font-stretch: 125%;
+  font-display: swap;
+  src: url('../assets/fonts/archivo-variable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Commit Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/commit-mono-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Commit Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../assets/fonts/commit-mono-700.woff2') format('woff2');
+}
+
+:root {
+  /* Tintas de processo — canal semântico de estado, nunca decorativo */
+  --ink-cyan: #2e93b8; /* tocado pelo agente nesta sessão */
+  --ink-magenta: #c4457f; /* modificado / não commitado */
+  --ink-yellow: #d9a521; /* diagnóstico, aviso, aguardando permissão */
+  --ink-overprint: #7a5e9e; /* ciano + magenta sobrepostos */
+
+  /* Substrato e superfícies — preto de tinta é quente, papel nunca é branco puro */
+  --substrate: #141210;
+  --panel: #1c1a18;
+  --rule: #2a2724;
+  --paper: #ede6da;
+  --muted: #8a8378;
+
+  /* Cores do realce de sintaxe do preview — paleta "One Dark-ish" própria,
+     independente do sistema CMYK (não carrega significado de estado). */
+  --syntax-comment: #6b6b76;
+  --syntax-string: #98c379;
+  --syntax-number: #d19a66;
+  --syntax-keyword: #c678dd;
+  --syntax-function: #61afef;
+  --syntax-tag: #e5c07b;
+  --syntax-operator: #9a9aa4;
+
+  /* --substrate at 40% alpha — SVG stroke can't reference a hex token and add opacity in one go. */
+  --mindmap-node-stroke: rgba(20, 18, 16, 0.4);
+}

@@ -64,7 +64,7 @@ export default function TerminalPane({
     let disposed = false
 
     const term = new XTerm({
-      fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+      fontFamily: '"Commit Mono", ui-monospace, monospace',
       fontSize,
       lineHeight: 1.35,
       cursorBlink: true,

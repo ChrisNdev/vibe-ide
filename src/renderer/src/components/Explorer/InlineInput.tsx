@@ -24,7 +24,7 @@ export default function InlineInput({ initialValue, indent, onSubmit, onCancel }
         ref={ref}
         defaultValue={initialValue}
         spellCheck={false}
-        className="w-full rounded border border-accent/50 bg-base-900 px-1 py-0.5 text-[13px] text-base-100 outline-none focus:border-accent"
+        className="w-full rounded border border-accent/50 bg-base-900 px-1 py-0.5 text-[13px] text-base-100 outline-none focus:border-ink-yellow"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {

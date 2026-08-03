@@ -369,11 +369,11 @@ export default function MindMap({ rootPath, active }: MindMapProps): JSX.Element
                     <circle
                       r={radius}
                       fill={colorForDir(n.dir)}
-                      stroke={isSelected ? '#fff' : 'rgba(0,0,0,0.4)'}
+                      stroke={isSelected ? 'var(--paper)' : 'var(--mindmap-node-stroke)'}
                       strokeWidth={isSelected ? 1.5 : 0.5}
                     />
                     {(isSelected || transform.k > LABEL_ZOOM_THRESHOLD) && (
-                      <text x={9} y={3} fontSize={10} fill="#c4c4cc" style={{ userSelect: 'none' }}>
+                      <text x={9} y={3} fontSize={10} fill="var(--muted)" style={{ userSelect: 'none' }}>
                         {n.label}
                       </text>
                     )}

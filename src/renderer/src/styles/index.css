@@ -1,9 +1,4 @@
-@import '@fontsource/inter/400.css';
-@import '@fontsource/inter/500.css';
-@import '@fontsource/inter/600.css';
-@import '@fontsource/jetbrains-mono/400.css';
-@import '@fontsource/jetbrains-mono/500.css';
-@import '@fontsource/jetbrains-mono/700.css';
+@import './tokens.css';
 
 @tailwind base;
 @tailwind components;
@@ -42,6 +37,13 @@
   ::-webkit-scrollbar-thumb:hover {
     background-color: theme('colors.base.500');
   }
+
+  /* Foco de teclado: 1px inset em --ink-yellow, nunca o outline padrão do Chromium.
+     outline-offset negativo puxa o traço pra dentro sem usar box-shadow (regra dura do sistema de design). */
+  :focus-visible {
+    outline: 1px solid var(--ink-yellow);
+    outline-offset: -1px;
+  }
 }
 
 @layer utilities {
@@ -59,39 +61,39 @@
 .token.prolog,
 .token.doctype,
 .token.cdata {
-  color: #6b6b76;
+  color: var(--syntax-comment);
   font-style: italic;
 }
 .token.string,
 .token.attr-value {
-  color: #98c379;
+  color: var(--syntax-string);
 }
 .token.number,
 .token.boolean,
 .token.constant {
-  color: #d19a66;
+  color: var(--syntax-number);
 }
 .token.keyword,
 .token.selector,
 .token.important {
-  color: #c678dd;
+  color: var(--syntax-keyword);
 }
 .token.function,
 .token.class-name {
-  color: #61afef;
+  color: var(--syntax-function);
 }
 .token.tag,
 .token.builtin {
-  color: #e5c07b;
+  color: var(--syntax-tag);
 }
 .token.operator,
 .token.punctuation,
 .token.property {
-  color: #9a9aa4;
+  color: var(--syntax-operator);
 }
 .token.deleted {
-  color: #e5484d;
+  @apply text-danger;
 }
 .token.inserted {
-  color: #39d98a;
+  @apply text-accent;
 }

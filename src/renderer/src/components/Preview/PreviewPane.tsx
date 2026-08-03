@@ -98,7 +98,7 @@ export default function PreviewPane({ active }: PreviewPaneProps): JSX.Element {
         <div className="flex-1" />
         {result && !result.binary && !result.truncated && (
           <>
-            <span className="text-base-500">
+            <span className="tabular-nums text-base-500">
               {formatSize(result.size)} · {lineCount} linhas · {formatTokens(tokenCount)}
             </span>
             <button
@@ -165,7 +165,7 @@ function FileCodeView({ content, highlighted }: { content: string; highlighted: 
   const lines = content.length ? content.split('\n') : []
   return (
     <div className="flex h-full overflow-auto">
-      <div className="select-none whitespace-pre-wrap bg-base-850 px-3 py-2 text-right font-mono text-[12px] leading-[1.6] text-base-500">
+      <div className="select-none whitespace-pre-wrap bg-base-850 px-3 py-2 text-right font-mono text-[12px] leading-[1.6] tabular-nums text-base-500">
         {lines.map((_, i) => (
           <div key={i}>{i + 1}</div>
         ))}
