@@ -24,7 +24,10 @@ import {
   HooksInstallResult,
   HooksStatus,
   TranscriptState,
-  TranscriptSessionSummary
+  TranscriptSessionSummary,
+  CheckpointMeta,
+  GitRepoCheckResult,
+  CheckpointRestoreResult
 } from '../shared/types'
 
 const api = {
@@ -155,6 +158,18 @@ const api = {
       const listener = (_e: Electron.IpcRendererEvent, state: TranscriptState): void => cb(state)
       ipcRenderer.on(IPC.TRANSCRIPT_UPDATE, listener)
       return () => ipcRenderer.removeListener(IPC.TRANSCRIPT_UPDATE, listener)
+    }
+  },
+  checkpoints: {
+    checkRepo: (rootPath: string): Promise<GitRepoCheckResult> => ipcRenderer.invoke(IPC.CHECKPOINTS_CHECK_REPO, rootPath),
+    list: (rootPath: string): Promise<CheckpointMeta[]> => ipcRenderer.invoke(IPC.CHECKPOINTS_LIST, rootPath),
+    diff: (rootPath: string, commit: string): Promise<string> => ipcRenderer.invoke(IPC.CHECKPOINTS_DIFF, rootPath, commit),
+    restore: (rootPath: string, commit: string): Promise<CheckpointRestoreResult> =>
+      ipcRenderer.invoke(IPC.CHECKPOINTS_RESTORE, rootPath, commit),
+    onEvent: (cb: (meta: CheckpointMeta) => void): (() => void) => {
+      const listener = (_e: Electron.IpcRendererEvent, meta: CheckpointMeta): void => cb(meta)
+      ipcRenderer.on(IPC.CHECKPOINTS_EVENT, listener)
+      return () => ipcRenderer.removeListener(IPC.CHECKPOINTS_EVENT, listener)
     }
   }
 }

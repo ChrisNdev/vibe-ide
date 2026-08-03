@@ -280,6 +280,26 @@ export interface TranscriptSessionSummary {
   gitBranch: string | null
 }
 
+export interface CheckpointMeta {
+  ref: string
+  commit: string
+  label: string
+  timestamp: string
+  sizeBytes: number
+  toolName: string
+}
+
+export interface CheckpointRestoreResult {
+  ok: boolean
+  filesChanged: string[]
+  error?: string
+}
+
+export interface GitRepoCheckResult {
+  isGitRepo: boolean
+  hasSubmodules: boolean
+}
+
 export const IPC = {
   DIALOG_OPEN_FOLDER: 'dialog:openFolder',
   FS_READ_DIR: 'fs:readDir',
@@ -336,5 +356,10 @@ export const IPC = {
   TRANSCRIPT_WATCH: 'transcript:watch',
   TRANSCRIPT_UNWATCH: 'transcript:unwatch',
   TRANSCRIPT_LIST_SESSIONS: 'transcript:listSessions',
-  TRANSCRIPT_UPDATE: 'transcript:update'
+  TRANSCRIPT_UPDATE: 'transcript:update',
+  CHECKPOINTS_CHECK_REPO: 'checkpoints:checkRepo',
+  CHECKPOINTS_LIST: 'checkpoints:list',
+  CHECKPOINTS_DIFF: 'checkpoints:diff',
+  CHECKPOINTS_RESTORE: 'checkpoints:restore',
+  CHECKPOINTS_EVENT: 'checkpoints:event'
 } as const

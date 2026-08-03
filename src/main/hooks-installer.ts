@@ -4,6 +4,8 @@ import path from 'path'
 import type { HooksInstallResult } from '../shared/types'
 
 const MANAGED_EVENTS = ['UserPromptSubmit', 'Stop', 'Notification'] as const
+/** Fase 6: checkpoints — snapshot the working tree right before the agent writes anything. */
+const CHECKPOINT_MATCHER = 'Edit|Write|MultiEdit'
 
 /**
  * Reads Claude Code's hook JSON from stdin and POSTs it to whatever local
@@ -113,6 +115,16 @@ export async function installHooks(rootPath: string): Promise<HooksInstallResult
       hooks[evt] = groups
       const alreadyThere = groups.some((g) => g.hooks?.some((h) => h.command === command))
       if (!alreadyThere) groups.push({ hooks: [{ type: 'command', command }] })
+    }
+
+    const preToolUseGroups =
+      (hooks['PreToolUse'] as { matcher?: string; hooks?: { type: string; command: string }[] }[]) ?? []
+    hooks['PreToolUse'] = preToolUseGroups
+    const checkpointGroupExists = preToolUseGroups.some(
+      (g) => g.matcher === CHECKPOINT_MATCHER && g.hooks?.some((h) => h.command === command)
+    )
+    if (!checkpointGroupExists) {
+      preToolUseGroups.push({ matcher: CHECKPOINT_MATCHER, hooks: [{ type: 'command', command }] })
     }
 
     await fs.writeFile(settingsPath, JSON.stringify(current, null, 2), 'utf-8')

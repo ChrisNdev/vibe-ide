@@ -7,6 +7,7 @@ import { registerBackgroundHandlers } from './background'
 import { registerSearchHandlers } from './search'
 import { registerHooksHandlers } from './hooks'
 import { registerTranscriptHandlers } from './transcript'
+import { registerCheckpointsHandlers } from './checkpoints'
 
 export function registerIpcHandlers(): void {
   registerFsHandlers()
@@ -18,4 +19,5 @@ export function registerIpcHandlers(): void {
   registerSearchHandlers()
   registerHooksHandlers()
   registerTranscriptHandlers()
+  registerCheckpointsHandlers()
 }

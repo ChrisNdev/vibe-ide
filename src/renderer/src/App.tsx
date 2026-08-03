@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search, Bell, Activity } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search, Bell, Activity, Camera } from 'lucide-react'
 import TerminalPane from './components/Terminal/Terminal'
 import FileExplorer from './components/Explorer/FileExplorer'
 import MindMap from './components/MindMap/MindMap'
@@ -13,6 +13,7 @@ import QuickOpen from './components/Search/QuickOpen'
 import HooksSettings from './components/Hooks/HooksSettings'
 import ControlStrip from './components/Hooks/ControlStrip'
 import ActivityPanel from './components/Activity/ActivityPanel'
+import CheckpointsPanel from './components/Checkpoints/CheckpointsPanel'
 import { useTerminalStore, nextTerminalId } from './store/terminalStore'
 import { useExplorerStore } from './store/explorerStore'
 import { useBackgroundStore } from './store/backgroundStore'
@@ -38,6 +39,7 @@ export default function App(): JSX.Element {
   const [searchOpen, setSearchOpen] = useState(false)
   const [quickOpenOpen, setQuickOpenOpen] = useState(false)
   const [hooksSettingsOpen, setHooksSettingsOpen] = useState(false)
+  const [checkpointsOpen, setCheckpointsOpen] = useState(false)
   const resizing = useRef(false)
   const hasBackground = useBackgroundStore((s) => s.config.kind !== 'none')
   const loadBackground = useBackgroundStore((s) => s.load)
@@ -232,6 +234,13 @@ export default function App(): JSX.Element {
           >
             <Bell size={14} />
           </button>
+          <button
+            title="Checkpoints"
+            className={`rounded p-1 hover:bg-base-700/60 ${checkpointsOpen ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
+            onClick={() => setCheckpointsOpen((v) => !v)}
+          >
+            <Camera size={14} />
+          </button>
           <UpdateChecker />
         </div>
         <div className="min-h-0 flex-1 overflow-hidden">
@@ -254,6 +263,7 @@ export default function App(): JSX.Element {
       {searchOpen && <SearchPanel onClose={() => setSearchOpen(false)} onOpenResult={openSearchResult} />}
       {quickOpenOpen && <QuickOpen onClose={() => setQuickOpenOpen(false)} onOpenResult={openQuickOpenResult} />}
       {hooksSettingsOpen && <HooksSettings onClose={() => setHooksSettingsOpen(false)} />}
+      {checkpointsOpen && <CheckpointsPanel onClose={() => setCheckpointsOpen(false)} />}
     </div>
   )
 }
