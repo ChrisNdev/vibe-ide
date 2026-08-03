@@ -29,7 +29,12 @@ import {
   GitRepoCheckResult,
   CheckpointRestoreResult,
   McpInstallResult,
-  McpStatus
+  McpStatus,
+  PackageScript,
+  RunOutputChunk,
+  RunStatusEvent,
+  DiagnosticsResult,
+  ConsoleErrorEntry
 } from '../shared/types'
 
 const api = {
@@ -181,6 +186,28 @@ const api = {
   },
   activeFile: {
     set: (filePath: string | null, line: number | null): Promise<void> => ipcRenderer.invoke(IPC.ACTIVE_FILE_SET, filePath, line)
+  },
+  scripts: {
+    list: (rootPath: string): Promise<PackageScript[]> => ipcRenderer.invoke(IPC.SCRIPTS_LIST, rootPath),
+    run: (rootPath: string, scriptName: string): Promise<string> => ipcRenderer.invoke(IPC.SCRIPTS_RUN, rootPath, scriptName),
+    stop: (): Promise<void> => ipcRenderer.invoke(IPC.SCRIPTS_STOP),
+    onOutput: (cb: (chunk: RunOutputChunk) => void): (() => void) => {
+      const listener = (_e: Electron.IpcRendererEvent, chunk: RunOutputChunk): void => cb(chunk)
+      ipcRenderer.on(IPC.SCRIPTS_OUTPUT, listener)
+      return () => ipcRenderer.removeListener(IPC.SCRIPTS_OUTPUT, listener)
+    },
+    onStatus: (cb: (evt: RunStatusEvent) => void): (() => void) => {
+      const listener = (_e: Electron.IpcRendererEvent, evt: RunStatusEvent): void => cb(evt)
+      ipcRenderer.on(IPC.SCRIPTS_STATUS, listener)
+      return () => ipcRenderer.removeListener(IPC.SCRIPTS_STATUS, listener)
+    }
+  },
+  diagnostics: {
+    run: (rootPath: string): Promise<DiagnosticsResult> => ipcRenderer.invoke(IPC.DIAGNOSTICS_RUN, rootPath)
+  },
+  consoleErrors: {
+    report: (entry: ConsoleErrorEntry): Promise<void> => ipcRenderer.invoke(IPC.CONSOLE_ERROR_REPORT, entry),
+    clear: (): Promise<void> => ipcRenderer.invoke(IPC.CONSOLE_ERRORS_CLEAR)
   }
 }
 

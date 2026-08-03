@@ -1,15 +1,11 @@
+import type { ConsoleErrorEntry } from '../shared/types'
+
 /**
  * Ring buffer of console errors / failed requests captured from the dev-server
  * preview webview (Fase 8). Lives here, not in mcp-tools.ts, so Fase 8's webview
  * wiring and the MCP get_console_errors tool share one source without either
  * depending on the other's module.
  */
-export interface ConsoleErrorEntry {
-  timestamp: string
-  type: 'console-error' | 'failed-request'
-  message: string
-  source?: string
-}
 
 const MAX_ENTRIES = 200
 let entries: ConsoleErrorEntry[] = []

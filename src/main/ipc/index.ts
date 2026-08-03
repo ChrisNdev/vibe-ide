@@ -9,6 +9,7 @@ import { registerHooksHandlers } from './hooks'
 import { registerTranscriptHandlers } from './transcript'
 import { registerCheckpointsHandlers } from './checkpoints'
 import { registerMcpHandlers } from './mcp'
+import { registerVerificationHandlers } from './verification'
 
 export function registerIpcHandlers(): void {
   registerFsHandlers()
@@ -22,4 +23,5 @@ export function registerIpcHandlers(): void {
   registerTranscriptHandlers()
   registerCheckpointsHandlers()
   registerMcpHandlers()
+  registerVerificationHandlers()
 }

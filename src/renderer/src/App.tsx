@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search, Bell, Activity, Camera, Plug } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search, Bell, Activity, Camera, Plug, FlaskConical } from 'lucide-react'
 import TerminalPane from './components/Terminal/Terminal'
 import FileExplorer from './components/Explorer/FileExplorer'
 import MindMap from './components/MindMap/MindMap'
@@ -15,12 +15,13 @@ import ControlStrip from './components/Hooks/ControlStrip'
 import ActivityPanel from './components/Activity/ActivityPanel'
 import CheckpointsPanel from './components/Checkpoints/CheckpointsPanel'
 import McpSettings from './components/Mcp/McpSettings'
+import VerificationPanel from './components/Verification/VerificationPanel'
 import { useTerminalStore, nextTerminalId } from './store/terminalStore'
 import { useExplorerStore } from './store/explorerStore'
 import { useBackgroundStore } from './store/backgroundStore'
 import { useActivityStore, ensureTranscriptSubscription } from './store/activityStore'
 
-type MainView = 'terminal' | 'mindmap' | 'preview' | 'activity'
+type MainView = 'terminal' | 'mindmap' | 'preview' | 'activity' | 'verification'
 
 const MIN_SIDEBAR_WIDTH = 180
 const MAX_SIDEBAR_WIDTH = 560
@@ -210,6 +211,13 @@ export default function App(): JSX.Element {
           >
             <Activity size={14} />
           </button>
+          <button
+            title="Verificação — rodar scripts, ver o preview, diagnósticos"
+            className={`rounded p-1 hover:bg-base-700/60 ${view === 'verification' ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
+            onClick={() => setView('verification')}
+          >
+            <FlaskConical size={14} />
+          </button>
           <div className="flex-1" />
           <ControlStrip />
           <button
@@ -266,6 +274,7 @@ export default function App(): JSX.Element {
           <MindMap rootPath={rootPath} active={view === 'mindmap'} />
           <PreviewPane active={view === 'preview'} />
           <ActivityPanel active={view === 'activity'} onResumed={() => setView('terminal')} />
+          <VerificationPanel active={view === 'verification'} />
         </div>
       </div>
       {bgSettingsOpen && <BackgroundSettings onClose={() => setBgSettingsOpen(false)} />}

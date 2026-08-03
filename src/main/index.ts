@@ -52,8 +52,31 @@ function createWindow(): BrowserWindow {
       preload: join(__dirname, '../preload/index.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: true
+      sandbox: true,
+      // Only for the Fase 8 verification panel's embedded dev-server preview —
+      // hardened below (will-attach-webview + per-webview navigation lockdown).
+      webviewTag: true
     }
+  })
+
+  // <webview> hardening (INVARIANTES — Fase 8 segurança do webview): a compromised
+  // renderer could otherwise ask for nodeIntegration/preload on the webview itself,
+  // so every attempt is forced back to safe defaults regardless of what was requested.
+  win.webContents.on('will-attach-webview', (_event, webPreferences, params) => {
+    webPreferences.nodeIntegration = false
+    webPreferences.contextIsolation = true
+    webPreferences.sandbox = true
+    delete webPreferences.preload
+    delete (webPreferences as { preloadURL?: string }).preloadURL
+    if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(params.src)) {
+      params.src = 'about:blank'
+    }
+  })
+  win.webContents.on('did-attach-webview', (_event, webContents) => {
+    webContents.setWindowOpenHandler(() => ({ action: 'deny' })) // allowpopups stays off
+    webContents.on('will-navigate', (navEvent, url) => {
+      if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(url)) navEvent.preventDefault()
+    })
   })
 
   const showOnce = (): void => {

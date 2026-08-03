@@ -310,6 +310,43 @@ export interface McpStatus {
   port: number | null
 }
 
+export interface PackageScript {
+  name: string
+  command: string
+}
+
+export interface RunOutputChunk {
+  runId: string
+  text: string
+  stream: 'stdout' | 'stderr'
+}
+
+export interface RunStatusEvent {
+  runId: string
+  type: 'exit' | 'server-detected'
+  exitCode?: number | null
+  port?: number
+}
+
+export interface ConsoleErrorEntry {
+  timestamp: string
+  type: 'console-error' | 'failed-request'
+  message: string
+  source?: string
+}
+
+export interface TscIssue {
+  file: string
+  line: number
+  column: number
+  message: string
+}
+
+export interface DiagnosticsResult {
+  typescript: { available: boolean; issues: TscIssue[] }
+  eslint: { available: boolean; issues: unknown[] }
+}
+
 export const IPC = {
   DIALOG_OPEN_FOLDER: 'dialog:openFolder',
   FS_READ_DIR: 'fs:readDir',
@@ -375,5 +412,13 @@ export const IPC = {
   MCP_INSTALL: 'mcp:install',
   MCP_UNINSTALL: 'mcp:uninstall',
   MCP_STATUS: 'mcp:status',
-  ACTIVE_FILE_SET: 'activeFile:set'
+  ACTIVE_FILE_SET: 'activeFile:set',
+  SCRIPTS_LIST: 'scripts:list',
+  SCRIPTS_RUN: 'scripts:run',
+  SCRIPTS_STOP: 'scripts:stop',
+  SCRIPTS_OUTPUT: 'scripts:output',
+  SCRIPTS_STATUS: 'scripts:status',
+  DIAGNOSTICS_RUN: 'diagnostics:run',
+  CONSOLE_ERROR_REPORT: 'consoleError:report',
+  CONSOLE_ERRORS_CLEAR: 'consoleErrors:clear'
 } as const

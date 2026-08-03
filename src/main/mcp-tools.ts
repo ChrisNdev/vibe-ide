@@ -1,13 +1,8 @@
-import { execFile } from 'child_process'
-import { promisify } from 'util'
 import fs from 'fs/promises'
-import fsSync from 'fs'
-import path from 'path'
 import { buildProjectGraph } from './graph-builder'
 import { getActiveFile } from './active-file-tracker'
 import { consoleErrorLog } from './console-error-log'
-
-const execFileAsync = promisify(execFile)
+import { runDiagnostics } from './diagnostics-runner'
 
 export interface ToolResult {
   content: { type: 'text'; text: string }[]
@@ -46,49 +41,6 @@ export const TOOL_DEFS = [
   }
 ] as const
 
-function parseTscOutput(output: string): { file: string; line: number; column: number; message: string }[] {
-  const issues: { file: string; line: number; column: number; message: string }[] = []
-  const re = /^(.+?)\((\d+),(\d+)\): (error|warning) (TS\d+: .+)$/
-  for (const rawLine of output.split(/\r?\n/)) {
-    const m = rawLine.match(re)
-    if (m) issues.push({ file: m[1], line: Number(m[2]), column: Number(m[3]), message: m[5] })
-  }
-  return issues
-}
-
-async function runTsc(rootPath: string): Promise<{ available: boolean; issues: ReturnType<typeof parseTscOutput> }> {
-  const tscBin = path.join(rootPath, 'node_modules', '.bin', process.platform === 'win32' ? 'tsc.cmd' : 'tsc')
-  const hasTsconfig = fsSync.existsSync(path.join(rootPath, 'tsconfig.json'))
-  const hasLocalTsc = fsSync.existsSync(tscBin)
-  if (!hasTsconfig || !hasLocalTsc) return { available: false, issues: [] }
-  try {
-    const { stdout } = await execFileAsync(tscBin, ['--noEmit', '--pretty', 'false'], { cwd: rootPath, maxBuffer: 16 * 1024 * 1024 })
-    return { available: true, issues: parseTscOutput(stdout) }
-  } catch (err) {
-    const stdout = (err as { stdout?: string }).stdout ?? ''
-    return { available: true, issues: parseTscOutput(stdout) }
-  }
-}
-
-async function runEslint(rootPath: string): Promise<{ available: boolean; issues: unknown[] }> {
-  const eslintBin = path.join(rootPath, 'node_modules', '.bin', process.platform === 'win32' ? 'eslint.cmd' : 'eslint')
-  const hasConfig = ['.eslintrc', '.eslintrc.js', '.eslintrc.json', '.eslintrc.cjs', 'eslint.config.js', 'eslint.config.mjs'].some((f) =>
-    fsSync.existsSync(path.join(rootPath, f))
-  )
-  if (!hasConfig || !fsSync.existsSync(eslintBin)) return { available: false, issues: [] }
-  try {
-    const { stdout } = await execFileAsync(eslintBin, ['.', '--format', 'json'], { cwd: rootPath, maxBuffer: 16 * 1024 * 1024 })
-    return { available: true, issues: JSON.parse(stdout) }
-  } catch (err) {
-    const stdout = (err as { stdout?: string }).stdout
-    try {
-      return { available: true, issues: stdout ? JSON.parse(stdout) : [] }
-    } catch {
-      return { available: true, issues: [] }
-    }
-  }
-}
-
 export async function callTool(name: string, rootPath: string | null): Promise<ToolResult> {
   switch (name) {
     case 'get_project_graph': {
@@ -98,8 +50,7 @@ export async function callTool(name: string, rootPath: string | null): Promise<T
     }
     case 'get_diagnostics': {
       if (!rootPath) return errorText('Nenhum projeto está aberto no vibeIDE.')
-      const [tsc, eslint] = await Promise.all([runTsc(rootPath), runEslint(rootPath)])
-      return text({ typescript: tsc, eslint })
+      return text(await runDiagnostics(rootPath))
     }
     case 'get_open_file': {
       const active = getActiveFile()
