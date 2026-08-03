@@ -9,6 +9,7 @@ import { startHooksServer, stopHooksServer } from './hooks-server'
 import { wireHookNotifications } from './notifications'
 import { wireCheckpointCreation } from './checkpoint-listener'
 import { startMcpServer, stopMcpServer } from './mcp-server'
+import { wireAgentBoard } from './agent-board'
 
 // Some machines (VMs, RDP sessions, IoT/embedded Windows editions) have a GPU
 // process that never produces a composited frame, which means the window's
@@ -120,6 +121,7 @@ app.whenReady().then(() => {
   void startMcpServer()
   wireHookNotifications(() => BrowserWindow.getAllWindows()[0] ?? null)
   wireCheckpointCreation(() => BrowserWindow.getAllWindows()[0] ?? null)
+  wireAgentBoard(() => BrowserWindow.getAllWindows()[0] ?? null)
   createWindow()
 
   app.on('activate', () => {

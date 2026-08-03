@@ -10,6 +10,7 @@ import { registerTranscriptHandlers } from './transcript'
 import { registerCheckpointsHandlers } from './checkpoints'
 import { registerMcpHandlers } from './mcp'
 import { registerVerificationHandlers } from './verification'
+import { registerWorktreeHandlers } from './worktree'
 
 export function registerIpcHandlers(): void {
   registerFsHandlers()
@@ -24,4 +25,5 @@ export function registerIpcHandlers(): void {
   registerCheckpointsHandlers()
   registerMcpHandlers()
   registerVerificationHandlers()
+  registerWorktreeHandlers()
 }

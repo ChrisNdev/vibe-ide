@@ -1,7 +1,7 @@
-export function colorForDir(dir: string): string {
-  const top = dir === '.' ? 'root' : dir.split('/')[0] || 'root'
-  let hash = 0
-  for (let i = 0; i < top.length; i++) hash = (hash * 31 + top.charCodeAt(i)) >>> 0
-  const hue = hash % 360
-  return `hsl(${hue}, 58%, 64%)`
+/** Fill class per the CMYK ink semantics — cyan/magenta/overprint communicate state, nothing else. */
+export function inkFillClass(touched: boolean, dirty: boolean): string {
+  if (touched && dirty) return 'fill-ink-overprint'
+  if (touched) return 'fill-ink-cyan'
+  if (dirty) return 'fill-ink-magenta'
+  return 'fill-base-700'
 }

@@ -1,6 +1,8 @@
 import chokidar, { FSWatcher } from 'chokidar'
+import path from 'path'
 import { BrowserWindow } from 'electron'
 import { IPC, FsWatchEvent } from '../shared/types'
+import { createIgnoreMatcher } from './gitignore'
 
 const watchers = new Map<string, FSWatcher>()
 
@@ -25,8 +27,9 @@ export function watchPath(win: BrowserWindow, rootPath: string): void {
   unwatchPath(rootPath)
   activeRoot = rootPath
 
+  const gitignored = createIgnoreMatcher(rootPath)
   const watcher = chokidar.watch(rootPath, {
-    ignored: IGNORED,
+    ignored: [...IGNORED, (p: string) => gitignored(path.relative(rootPath, p).split(path.sep).join('/'))],
     ignoreInitial: true,
     depth: 20,
     persistent: true,

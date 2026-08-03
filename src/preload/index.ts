@@ -13,6 +13,7 @@ import {
   FileReadResult,
   UpdateCheckResult,
   UpdateInstallResult,
+  PendingPatchNotes,
   BackgroundConfig,
   BackgroundImageResult,
   ThemeExportResult,
@@ -34,7 +35,10 @@ import {
   RunOutputChunk,
   RunStatusEvent,
   DiagnosticsResult,
-  ConsoleErrorEntry
+  ConsoleErrorEntry,
+  WorktreeInfo,
+  WorktreeResult,
+  AgentStatus
 } from '../shared/types'
 
 const api = {
@@ -113,7 +117,8 @@ const api = {
     checkForUpdate: (): Promise<UpdateCheckResult> => ipcRenderer.invoke(IPC.APP_CHECK_UPDATE),
     installUpdate: (releaseTag: string): Promise<UpdateInstallResult> =>
       ipcRenderer.invoke(IPC.APP_INSTALL_UPDATE, releaseTag),
-    openExternal: (url: string): Promise<void> => ipcRenderer.invoke(IPC.APP_OPEN_EXTERNAL, url)
+    openExternal: (url: string): Promise<void> => ipcRenderer.invoke(IPC.APP_OPEN_EXTERNAL, url),
+    getPendingPatchNotes: (): Promise<PendingPatchNotes | null> => ipcRenderer.invoke(IPC.APP_GET_PENDING_PATCH_NOTES)
   },
   graph: {
     build: (rootPath: string): Promise<ProjectGraph> => ipcRenderer.invoke(IPC.GRAPH_BUILD, rootPath)
@@ -208,6 +213,18 @@ const api = {
   consoleErrors: {
     report: (entry: ConsoleErrorEntry): Promise<void> => ipcRenderer.invoke(IPC.CONSOLE_ERROR_REPORT, entry),
     clear: (): Promise<void> => ipcRenderer.invoke(IPC.CONSOLE_ERRORS_CLEAR)
+  },
+  worktree: {
+    create: (rootPath: string, taskName: string): Promise<WorktreeResult> => ipcRenderer.invoke(IPC.WORKTREE_CREATE, rootPath, taskName),
+    list: (rootPath: string): Promise<WorktreeInfo[]> => ipcRenderer.invoke(IPC.WORKTREE_LIST, rootPath),
+    remove: (rootPath: string, worktreePath: string): Promise<WorktreeResult> => ipcRenderer.invoke(IPC.WORKTREE_REMOVE, rootPath, worktreePath),
+    diff: (rootPath: string, branch: string): Promise<string> => ipcRenderer.invoke(IPC.WORKTREE_DIFF, rootPath, branch),
+    merge: (rootPath: string, branch: string): Promise<WorktreeResult> => ipcRenderer.invoke(IPC.WORKTREE_MERGE, rootPath, branch),
+    onStatusEvent: (cb: (evt: { path: string; status: AgentStatus }) => void): (() => void) => {
+      const listener = (_e: Electron.IpcRendererEvent, evt: { path: string; status: AgentStatus }): void => cb(evt)
+      ipcRenderer.on(IPC.WORKTREE_STATUS_EVENT, listener)
+      return () => ipcRenderer.removeListener(IPC.WORKTREE_STATUS_EVENT, listener)
+    }
   }
 }
 

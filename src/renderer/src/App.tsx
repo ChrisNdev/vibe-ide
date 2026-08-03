@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search, Bell, Activity, Camera, Plug, FlaskConical } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search, Bell, Activity, Camera, Plug, FlaskConical, GitBranch } from 'lucide-react'
 import TerminalPane from './components/Terminal/Terminal'
 import FileExplorer from './components/Explorer/FileExplorer'
 import MindMap from './components/MindMap/MindMap'
@@ -16,10 +16,14 @@ import ActivityPanel from './components/Activity/ActivityPanel'
 import CheckpointsPanel from './components/Checkpoints/CheckpointsPanel'
 import McpSettings from './components/Mcp/McpSettings'
 import VerificationPanel from './components/Verification/VerificationPanel'
+import TerminalTabs from './components/Terminal/TerminalTabs'
+import WorktreePanel from './components/Worktree/WorktreePanel'
+import PatchNotesModal from './components/PatchNotes/PatchNotesModal'
 import { useTerminalStore, nextTerminalId } from './store/terminalStore'
 import { useExplorerStore } from './store/explorerStore'
 import { useBackgroundStore } from './store/backgroundStore'
 import { useActivityStore, ensureTranscriptSubscription } from './store/activityStore'
+import type { PendingPatchNotes } from '@shared/types'
 
 type MainView = 'terminal' | 'mindmap' | 'preview' | 'activity' | 'verification'
 
@@ -43,6 +47,8 @@ export default function App(): JSX.Element {
   const [hooksSettingsOpen, setHooksSettingsOpen] = useState(false)
   const [checkpointsOpen, setCheckpointsOpen] = useState(false)
   const [mcpOpen, setMcpOpen] = useState(false)
+  const [worktreeOpen, setWorktreeOpen] = useState(false)
+  const [patchNotes, setPatchNotes] = useState<PendingPatchNotes | null>(null)
   const resizing = useRef(false)
   const hasBackground = useBackgroundStore((s) => s.config.kind !== 'none')
   const loadBackground = useBackgroundStore((s) => s.load)
@@ -58,6 +64,9 @@ export default function App(): JSX.Element {
     })()
     void loadBackground()
     ensureTranscriptSubscription()
+    void window.api.app.getPendingPatchNotes().then((pending) => {
+      if (!cancelled && pending) setPatchNotes(pending)
+    })
     return () => {
       cancelled = true
     }
@@ -258,8 +267,16 @@ export default function App(): JSX.Element {
           >
             <Plug size={14} />
           </button>
+          <button
+            title="Tarefas paralelas — worktrees"
+            className={`rounded p-1 hover:bg-base-700/60 ${worktreeOpen ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
+            onClick={() => setWorktreeOpen((v) => !v)}
+          >
+            <GitBranch size={14} />
+          </button>
           <UpdateChecker />
         </div>
+        {view === 'terminal' && <TerminalTabs />}
         <div className="min-h-0 flex-1 overflow-hidden">
           {tabs.map((tab) => (
             <TerminalPane
@@ -283,6 +300,16 @@ export default function App(): JSX.Element {
       {hooksSettingsOpen && <HooksSettings onClose={() => setHooksSettingsOpen(false)} />}
       {checkpointsOpen && <CheckpointsPanel onClose={() => setCheckpointsOpen(false)} />}
       {mcpOpen && <McpSettings onClose={() => setMcpOpen(false)} />}
+      {worktreeOpen && (
+        <WorktreePanel
+          onClose={() => setWorktreeOpen(false)}
+          onOpenTerminal={() => {
+            setView('terminal')
+            setWorktreeOpen(false)
+          }}
+        />
+      )}
+      {patchNotes && <PatchNotesModal patchNotes={patchNotes} onClose={() => setPatchNotes(null)} />}
     </div>
   )
 }

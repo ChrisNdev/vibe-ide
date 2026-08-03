@@ -4,6 +4,8 @@ import { AppSettings, BackgroundConfig, RecentProject } from '../shared/types'
 interface StoreSchema {
   settings: AppSettings
   recents: RecentProject[]
+  /** app.getVersion() as of the last launch — drives the once-per-update patch notes prompt */
+  lastSeenVersion: string | null
 }
 
 export const DEFAULT_BACKGROUND: BackgroundConfig = {
@@ -38,7 +40,8 @@ export const store = new Store<StoreSchema>({
       background: DEFAULT_BACKGROUND,
       notifications: DEFAULT_NOTIFICATIONS
     },
-    recents: []
+    recents: [],
+    lastSeenVersion: null
   }
 })
 

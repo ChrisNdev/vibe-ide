@@ -4,6 +4,7 @@ directories:
   buildResources: build
 asarUnpack:
   - '**/node_modules/@homebridge/node-pty-prebuilt-multiarch/**/*'
+  - '**/node_modules/@oxc-parser/**/*'
 win:
   executableName: vibe-ide
   target:

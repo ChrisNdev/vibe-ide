@@ -150,11 +150,19 @@ export interface GraphNode {
   dir: string
   ext: string
   size: number
+  /** chars/4 estimate — same heuristic as the Preview pane's token counter */
+  tokenWeight: number
+  /** true if nothing in the project imports it and it imports nothing itself */
+  orphan: boolean
+  /** true if it sits on at least one import cycle */
+  inCycle: boolean
 }
 
 export interface GraphEdge {
   source: string
   target: string
+  /** true if both endpoints sit on a cycle (not necessarily this exact edge's cycle) */
+  inCycle: boolean
 }
 
 export interface ProjectGraph {
@@ -179,6 +187,14 @@ export interface UpdateCheckResult {
 export interface UpdateInstallResult {
   ok: boolean
   error?: string
+}
+
+/** Non-null only the first time the app is opened after its version changed — null once already seen. */
+export interface PendingPatchNotes {
+  version: string
+  /** release body from GitHub, markdown — null if gh isn't available/logged in */
+  notes: string | null
+  releaseUrl: string | null
 }
 
 export interface SearchOptions {
@@ -347,6 +363,21 @@ export interface DiagnosticsResult {
   eslint: { available: boolean; issues: unknown[] }
 }
 
+export type AgentStatus = 'running' | 'waiting' | 'idle'
+
+export interface WorktreeInfo {
+  path: string
+  branch: string
+  createdAt: string
+  status: AgentStatus
+}
+
+export interface WorktreeResult {
+  ok: boolean
+  path?: string
+  error?: string
+}
+
 export const IPC = {
   DIALOG_OPEN_FOLDER: 'dialog:openFolder',
   FS_READ_DIR: 'fs:readDir',
@@ -385,6 +416,7 @@ export const IPC = {
   APP_CHECK_UPDATE: 'app:checkUpdate',
   APP_INSTALL_UPDATE: 'app:installUpdate',
   APP_OPEN_EXTERNAL: 'app:openExternal',
+  APP_GET_PENDING_PATCH_NOTES: 'app:getPendingPatchNotes',
   GRAPH_BUILD: 'graph:build',
   BACKGROUND_PICK_IMAGE: 'background:pickImage',
   BACKGROUND_REMOVE: 'background:remove',
@@ -420,5 +452,11 @@ export const IPC = {
   SCRIPTS_STATUS: 'scripts:status',
   DIAGNOSTICS_RUN: 'diagnostics:run',
   CONSOLE_ERROR_REPORT: 'consoleError:report',
-  CONSOLE_ERRORS_CLEAR: 'consoleErrors:clear'
+  CONSOLE_ERRORS_CLEAR: 'consoleErrors:clear',
+  WORKTREE_CREATE: 'worktree:create',
+  WORKTREE_LIST: 'worktree:list',
+  WORKTREE_REMOVE: 'worktree:remove',
+  WORKTREE_DIFF: 'worktree:diff',
+  WORKTREE_MERGE: 'worktree:merge',
+  WORKTREE_STATUS_EVENT: 'worktree:statusEvent'
 } as const

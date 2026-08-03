@@ -5,7 +5,7 @@ import fsSync from 'fs'
 import fs from 'fs/promises'
 import { execFile, spawn } from 'child_process'
 import { promisify } from 'util'
-import { IPC, AppSettings, RecentProject, UpdateCheckResult, UpdateInstallResult } from '../../shared/types'
+import { IPC, AppSettings, RecentProject, UpdateCheckResult, UpdateInstallResult, PendingPatchNotes } from '../../shared/types'
 import { store, getSettings } from '../store'
 
 const execFileAsync = promisify(execFile)
@@ -146,6 +146,24 @@ export function registerSettingsHandlers(): void {
 
   ipcMain.handle(IPC.APP_OPEN_EXTERNAL, async (_e, url: string) => {
     if (/^https:\/\/github\.com\//.test(url)) await shell.openExternal(url)
+  })
+
+  ipcMain.handle(IPC.APP_GET_PENDING_PATCH_NOTES, async (): Promise<PendingPatchNotes | null> => {
+    const currentVersion = app.getVersion()
+    const lastSeen = store.get('lastSeenVersion')
+    store.set('lastSeenVersion', currentVersion)
+    // null lastSeen = fresh install, nothing to compare against — don't greet a first-time user with "patch notes"
+    if (lastSeen === null || lastSeen === currentVersion) return null
+
+    try {
+      const gh = await resolveGhPath()
+      const { stdout } = await execFileAsync(gh, ['release', 'view', `v${currentVersion}`, '--repo', UPDATE_REPO, '--json', 'body,url'])
+      const data = JSON.parse(stdout) as { body: string; url: string }
+      return { version: currentVersion, notes: data.body || null, releaseUrl: data.url }
+    } catch {
+      // gh unavailable/not logged in/no matching release — still worth a one-time "you're now on vX" nudge
+      return { version: currentVersion, notes: null, releaseUrl: null }
+    }
   })
 
   ipcMain.handle(IPC.APP_INSTALL_UPDATE, async (_e, releaseTag: string): Promise<UpdateInstallResult> => {
