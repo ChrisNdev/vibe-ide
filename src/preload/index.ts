@@ -19,7 +19,10 @@ import {
   ThemeImportResult,
   SearchOptions,
   SearchMatch,
-  SearchDoneEvent
+  SearchDoneEvent,
+  HookEvent,
+  HooksInstallResult,
+  HooksStatus
 } from '../shared/types'
 
 const api = {
@@ -130,6 +133,16 @@ const api = {
       const listener = (_e: Electron.IpcRendererEvent, evt: SearchDoneEvent): void => cb(evt)
       ipcRenderer.on(IPC.SEARCH_DONE, listener)
       return () => ipcRenderer.removeListener(IPC.SEARCH_DONE, listener)
+    }
+  },
+  hooks: {
+    install: (rootPath: string): Promise<HooksInstallResult> => ipcRenderer.invoke(IPC.HOOKS_INSTALL, rootPath),
+    uninstall: (rootPath: string): Promise<HooksInstallResult> => ipcRenderer.invoke(IPC.HOOKS_UNINSTALL, rootPath),
+    status: (rootPath: string): Promise<HooksStatus> => ipcRenderer.invoke(IPC.HOOKS_STATUS, rootPath),
+    onEvent: (cb: (evt: HookEvent) => void): (() => void) => {
+      const listener = (_e: Electron.IpcRendererEvent, evt: HookEvent): void => cb(evt)
+      ipcRenderer.on(IPC.HOOKS_EVENT, listener)
+      return () => ipcRenderer.removeListener(IPC.HOOKS_EVENT, listener)
     }
   }
 }

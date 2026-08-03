@@ -126,6 +126,7 @@ export interface AppSettings {
   sidebarWidth: number
   sidebarCollapsed: boolean
   background: BackgroundConfig
+  notifications: NotificationSettings
 }
 
 export interface FsWatchEvent {
@@ -207,6 +208,33 @@ export interface SearchDoneEvent {
   cancelled: boolean
 }
 
+/**
+ * Raw payload Claude Code writes to a hook command's stdin, forwarded byte-for-byte
+ * by the installed hook script — field names are Claude Code's own (snake_case),
+ * not renamed, since this is just relaying their wire format.
+ */
+export interface HookEvent {
+  hook_event_name: string
+  session_id?: string
+  cwd?: string
+  transcript_path?: string
+  [key: string]: unknown
+}
+
+export interface HooksStatus {
+  installed: boolean
+}
+
+export interface HooksInstallResult {
+  ok: boolean
+  error?: string
+}
+
+export interface NotificationSettings {
+  enabled: boolean
+  sound: boolean
+}
+
 export const IPC = {
   DIALOG_OPEN_FOLDER: 'dialog:openFolder',
   FS_READ_DIR: 'fs:readDir',
@@ -255,5 +283,9 @@ export const IPC = {
   SEARCH_CANCEL: 'search:cancel',
   SEARCH_RESULT: 'search:result',
   SEARCH_DONE: 'search:done',
-  SEARCH_LIST_FILES: 'search:listFiles'
+  SEARCH_LIST_FILES: 'search:listFiles',
+  HOOKS_INSTALL: 'hooks:install',
+  HOOKS_UNINSTALL: 'hooks:uninstall',
+  HOOKS_STATUS: 'hooks:status',
+  HOOKS_EVENT: 'hooks:event'
 } as const

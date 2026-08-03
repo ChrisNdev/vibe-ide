@@ -24,6 +24,8 @@ export const DEFAULT_BACKGROUND: BackgroundConfig = {
   useSystemWallpaper: false
 }
 
+export const DEFAULT_NOTIFICATIONS = { enabled: true, sound: true }
+
 export const store = new Store<StoreSchema>({
   defaults: {
     settings: {
@@ -33,7 +35,8 @@ export const store = new Store<StoreSchema>({
       theme: 'dark',
       sidebarWidth: 280,
       sidebarCollapsed: false,
-      background: DEFAULT_BACKGROUND
+      background: DEFAULT_BACKGROUND,
+      notifications: DEFAULT_NOTIFICATIONS
     },
     recents: []
   }
@@ -44,12 +47,16 @@ export const store = new Store<StoreSchema>({
  * entirely — it won't backfill new sub-fields (like `background`) into a
  * settings object that already exists on disk from before this field existed.
  * Read through this instead of `store.get('settings')` directly so upgrading
- * users don't end up with `settings.background === undefined`.
+ * users don't end up with `settings.background`/`notifications` undefined.
  */
 export function getSettings(): AppSettings {
   const current = store.get('settings')
-  if (current.background) return current
-  const withBackground: AppSettings = { ...current, background: DEFAULT_BACKGROUND }
-  store.set('settings', withBackground)
-  return withBackground
+  if (current.background && current.notifications) return current
+  const patched: AppSettings = {
+    ...current,
+    background: current.background ?? DEFAULT_BACKGROUND,
+    notifications: current.notifications ?? DEFAULT_NOTIFICATIONS
+  }
+  store.set('settings', patched)
+  return patched
 }

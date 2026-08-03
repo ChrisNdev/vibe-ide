@@ -5,6 +5,8 @@ import { registerIpcHandlers } from './ipc'
 import { killAllPtys } from './pty-manager'
 import { registerBackgroundProtocol } from './background-processor'
 import { getSettings } from './store'
+import { startHooksServer, stopHooksServer } from './hooks-server'
+import { wireHookNotifications } from './notifications'
 
 // Some machines (VMs, RDP sessions, IoT/embedded Windows editions) have a GPU
 // process that never produces a composited frame, which means the window's
@@ -89,6 +91,8 @@ app.whenReady().then(() => {
 
   registerIpcHandlers()
   registerBackgroundProtocol()
+  startHooksServer()
+  wireHookNotifications(() => BrowserWindow.getAllWindows()[0] ?? null)
   createWindow()
 
   app.on('activate', () => {
@@ -103,4 +107,5 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   killAllPtys()
+  stopHooksServer()
 })

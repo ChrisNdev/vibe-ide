@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search, Bell } from 'lucide-react'
 import TerminalPane from './components/Terminal/Terminal'
 import FileExplorer from './components/Explorer/FileExplorer'
 import MindMap from './components/MindMap/MindMap'
@@ -10,6 +10,8 @@ import BackgroundLayer from './components/Background/BackgroundLayer'
 import BackgroundSettings from './components/Background/BackgroundSettings'
 import SearchPanel from './components/Search/SearchPanel'
 import QuickOpen from './components/Search/QuickOpen'
+import HooksSettings from './components/Hooks/HooksSettings'
+import ControlStrip from './components/Hooks/ControlStrip'
 import { useTerminalStore, nextTerminalId } from './store/terminalStore'
 import { useExplorerStore } from './store/explorerStore'
 import { useBackgroundStore } from './store/backgroundStore'
@@ -33,6 +35,7 @@ export default function App(): JSX.Element {
   const [bgSettingsOpen, setBgSettingsOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [quickOpenOpen, setQuickOpenOpen] = useState(false)
+  const [hooksSettingsOpen, setHooksSettingsOpen] = useState(false)
   const resizing = useRef(false)
   const hasBackground = useBackgroundStore((s) => s.config.kind !== 'none')
   const loadBackground = useBackgroundStore((s) => s.load)
@@ -189,6 +192,7 @@ export default function App(): JSX.Element {
             <Eye size={14} />
           </button>
           <div className="flex-1" />
+          <ControlStrip />
           <button
             title="Buscar no projeto (Ctrl+Shift+F)"
             className={`rounded p-1 hover:bg-base-700/60 ${searchOpen ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
@@ -205,6 +209,13 @@ export default function App(): JSX.Element {
             onClick={() => setBgSettingsOpen((v) => !v)}
           >
             <Palette size={14} />
+          </button>
+          <button
+            title="Hooks e notificações"
+            className={`rounded p-1 hover:bg-base-700/60 ${hooksSettingsOpen ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
+            onClick={() => setHooksSettingsOpen((v) => !v)}
+          >
+            <Bell size={14} />
           </button>
           <UpdateChecker />
         </div>
@@ -226,6 +237,7 @@ export default function App(): JSX.Element {
       {bgSettingsOpen && <BackgroundSettings onClose={() => setBgSettingsOpen(false)} />}
       {searchOpen && <SearchPanel onClose={() => setSearchOpen(false)} onOpenResult={openSearchResult} />}
       {quickOpenOpen && <QuickOpen onClose={() => setQuickOpenOpen(false)} onOpenResult={openQuickOpenResult} />}
+      {hooksSettingsOpen && <HooksSettings onClose={() => setHooksSettingsOpen(false)} />}
     </div>
   )
 }
