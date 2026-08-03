@@ -300,6 +300,16 @@ export interface GitRepoCheckResult {
   hasSubmodules: boolean
 }
 
+export interface McpInstallResult {
+  ok: boolean
+  error?: string
+}
+
+export interface McpStatus {
+  installed: boolean
+  port: number | null
+}
+
 export const IPC = {
   DIALOG_OPEN_FOLDER: 'dialog:openFolder',
   FS_READ_DIR: 'fs:readDir',
@@ -361,5 +371,9 @@ export const IPC = {
   CHECKPOINTS_LIST: 'checkpoints:list',
   CHECKPOINTS_DIFF: 'checkpoints:diff',
   CHECKPOINTS_RESTORE: 'checkpoints:restore',
-  CHECKPOINTS_EVENT: 'checkpoints:event'
+  CHECKPOINTS_EVENT: 'checkpoints:event',
+  MCP_INSTALL: 'mcp:install',
+  MCP_UNINSTALL: 'mcp:uninstall',
+  MCP_STATUS: 'mcp:status',
+  ACTIVE_FILE_SET: 'activeFile:set'
 } as const

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search, Bell, Activity, Camera } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search, Bell, Activity, Camera, Plug } from 'lucide-react'
 import TerminalPane from './components/Terminal/Terminal'
 import FileExplorer from './components/Explorer/FileExplorer'
 import MindMap from './components/MindMap/MindMap'
@@ -14,6 +14,7 @@ import HooksSettings from './components/Hooks/HooksSettings'
 import ControlStrip from './components/Hooks/ControlStrip'
 import ActivityPanel from './components/Activity/ActivityPanel'
 import CheckpointsPanel from './components/Checkpoints/CheckpointsPanel'
+import McpSettings from './components/Mcp/McpSettings'
 import { useTerminalStore, nextTerminalId } from './store/terminalStore'
 import { useExplorerStore } from './store/explorerStore'
 import { useBackgroundStore } from './store/backgroundStore'
@@ -40,6 +41,7 @@ export default function App(): JSX.Element {
   const [quickOpenOpen, setQuickOpenOpen] = useState(false)
   const [hooksSettingsOpen, setHooksSettingsOpen] = useState(false)
   const [checkpointsOpen, setCheckpointsOpen] = useState(false)
+  const [mcpOpen, setMcpOpen] = useState(false)
   const resizing = useRef(false)
   const hasBackground = useBackgroundStore((s) => s.config.kind !== 'none')
   const loadBackground = useBackgroundStore((s) => s.load)
@@ -241,6 +243,13 @@ export default function App(): JSX.Element {
           >
             <Camera size={14} />
           </button>
+          <button
+            title="Servidor MCP"
+            className={`rounded p-1 hover:bg-base-700/60 ${mcpOpen ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
+            onClick={() => setMcpOpen((v) => !v)}
+          >
+            <Plug size={14} />
+          </button>
           <UpdateChecker />
         </div>
         <div className="min-h-0 flex-1 overflow-hidden">
@@ -264,6 +273,7 @@ export default function App(): JSX.Element {
       {quickOpenOpen && <QuickOpen onClose={() => setQuickOpenOpen(false)} onOpenResult={openQuickOpenResult} />}
       {hooksSettingsOpen && <HooksSettings onClose={() => setHooksSettingsOpen(false)} />}
       {checkpointsOpen && <CheckpointsPanel onClose={() => setCheckpointsOpen(false)} />}
+      {mcpOpen && <McpSettings onClose={() => setMcpOpen(false)} />}
     </div>
   )
 }

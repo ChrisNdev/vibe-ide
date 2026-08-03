@@ -27,7 +27,9 @@ import {
   TranscriptSessionSummary,
   CheckpointMeta,
   GitRepoCheckResult,
-  CheckpointRestoreResult
+  CheckpointRestoreResult,
+  McpInstallResult,
+  McpStatus
 } from '../shared/types'
 
 const api = {
@@ -171,6 +173,14 @@ const api = {
       ipcRenderer.on(IPC.CHECKPOINTS_EVENT, listener)
       return () => ipcRenderer.removeListener(IPC.CHECKPOINTS_EVENT, listener)
     }
+  },
+  mcp: {
+    install: (rootPath: string): Promise<McpInstallResult> => ipcRenderer.invoke(IPC.MCP_INSTALL, rootPath),
+    uninstall: (rootPath: string): Promise<McpInstallResult> => ipcRenderer.invoke(IPC.MCP_UNINSTALL, rootPath),
+    status: (rootPath: string): Promise<McpStatus> => ipcRenderer.invoke(IPC.MCP_STATUS, rootPath)
+  },
+  activeFile: {
+    set: (filePath: string | null, line: number | null): Promise<void> => ipcRenderer.invoke(IPC.ACTIVE_FILE_SET, filePath, line)
   }
 }
 

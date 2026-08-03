@@ -152,5 +152,8 @@ export const useExplorerStore = create<ExplorerState>((set, get) => ({
 
   setTouchedFiles: (files) => set({ touchedFiles: files }),
   setSelected: (path) => set({ selectedPath: path }),
-  setPreview: (path, line) => set((state) => ({ previewPath: path, previewLine: line ?? null, previewNonce: state.previewNonce + 1 }))
+  setPreview: (path, line) => {
+    set((state) => ({ previewPath: path, previewLine: line ?? null, previewNonce: state.previewNonce + 1 }))
+    void window.api.activeFile.set(path, line ?? null)
+  }
 }))
