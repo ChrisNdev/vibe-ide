@@ -16,7 +16,10 @@ import {
   BackgroundConfig,
   BackgroundImageResult,
   ThemeExportResult,
-  ThemeImportResult
+  ThemeImportResult,
+  SearchOptions,
+  SearchMatch,
+  SearchDoneEvent
 } from '../shared/types'
 
 const api = {
@@ -113,6 +116,21 @@ const api = {
     export: (name: string, tokens: Record<string, string>, background: BackgroundConfig): Promise<ThemeExportResult> =>
       ipcRenderer.invoke(IPC.THEME_EXPORT, name, tokens, background),
     import: (): Promise<ThemeImportResult> => ipcRenderer.invoke(IPC.THEME_IMPORT)
+  },
+  search: {
+    run: (rootPath: string, opts: SearchOptions): Promise<void> => ipcRenderer.invoke(IPC.SEARCH_RUN, rootPath, opts),
+    cancel: (): Promise<void> => ipcRenderer.invoke(IPC.SEARCH_CANCEL),
+    listFiles: (rootPath: string): Promise<string[]> => ipcRenderer.invoke(IPC.SEARCH_LIST_FILES, rootPath),
+    onResult: (cb: (matches: SearchMatch[]) => void): (() => void) => {
+      const listener = (_e: Electron.IpcRendererEvent, matches: SearchMatch[]): void => cb(matches)
+      ipcRenderer.on(IPC.SEARCH_RESULT, listener)
+      return () => ipcRenderer.removeListener(IPC.SEARCH_RESULT, listener)
+    },
+    onDone: (cb: (evt: SearchDoneEvent) => void): (() => void) => {
+      const listener = (_e: Electron.IpcRendererEvent, evt: SearchDoneEvent): void => cb(evt)
+      ipcRenderer.on(IPC.SEARCH_DONE, listener)
+      return () => ipcRenderer.removeListener(IPC.SEARCH_DONE, listener)
+    }
   }
 }
 

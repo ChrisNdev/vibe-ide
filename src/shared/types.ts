@@ -180,6 +180,33 @@ export interface UpdateInstallResult {
   error?: string
 }
 
+export interface SearchOptions {
+  query: string
+  caseSensitive: boolean
+  regex: boolean
+  respectGitignore: boolean
+  /** glob, e.g. "*.ts" — empty means no filter */
+  includeGlob: string
+  /** glob, e.g. "*.test.ts" — empty means no filter */
+  excludeGlob: string
+}
+
+export interface SearchMatch {
+  /** absolute path */
+  file: string
+  line: number
+  /** 0-based column offsets into lineText */
+  matchStart: number
+  matchEnd: number
+  lineText: string
+}
+
+export interface SearchDoneEvent {
+  total: number
+  truncated: boolean
+  cancelled: boolean
+}
+
 export const IPC = {
   DIALOG_OPEN_FOLDER: 'dialog:openFolder',
   FS_READ_DIR: 'fs:readDir',
@@ -223,5 +250,10 @@ export const IPC = {
   BACKGROUND_REMOVE: 'background:remove',
   BACKGROUND_REGENERATE: 'background:regenerate',
   THEME_EXPORT: 'theme:export',
-  THEME_IMPORT: 'theme:import'
+  THEME_IMPORT: 'theme:import',
+  SEARCH_RUN: 'search:run',
+  SEARCH_CANCEL: 'search:cancel',
+  SEARCH_RESULT: 'search:result',
+  SEARCH_DONE: 'search:done',
+  SEARCH_LIST_FILES: 'search:listFiles'
 } as const

@@ -4,6 +4,7 @@ import { registerPtyHandlers } from './pty'
 import { registerSettingsHandlers } from './settings'
 import { registerGraphHandlers } from './graph'
 import { registerBackgroundHandlers } from './background'
+import { registerSearchHandlers } from './search'
 
 export function registerIpcHandlers(): void {
   registerFsHandlers()
@@ -12,4 +13,5 @@ export function registerIpcHandlers(): void {
   registerSettingsHandlers()
   registerGraphHandlers()
   registerBackgroundHandlers()
+  registerSearchHandlers()
 }

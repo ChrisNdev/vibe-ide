@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search } from 'lucide-react'
 import TerminalPane from './components/Terminal/Terminal'
 import FileExplorer from './components/Explorer/FileExplorer'
 import MindMap from './components/MindMap/MindMap'
@@ -8,6 +8,8 @@ import WelcomeScreen from './components/Welcome/WelcomeScreen'
 import UpdateChecker from './components/UpdateChecker/UpdateChecker'
 import BackgroundLayer from './components/Background/BackgroundLayer'
 import BackgroundSettings from './components/Background/BackgroundSettings'
+import SearchPanel from './components/Search/SearchPanel'
+import QuickOpen from './components/Search/QuickOpen'
 import { useTerminalStore, nextTerminalId } from './store/terminalStore'
 import { useExplorerStore } from './store/explorerStore'
 import { useBackgroundStore } from './store/backgroundStore'
@@ -23,11 +25,14 @@ export default function App(): JSX.Element {
   const addTab = useTerminalStore((s) => s.addTab)
   const rootPath = useExplorerStore((s) => s.rootPath)
   const setRoot = useExplorerStore((s) => s.setRoot)
+  const setPreview = useExplorerStore((s) => s.setPreview)
   const [ready, setReady] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(280)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [view, setView] = useState<MainView>('terminal')
   const [bgSettingsOpen, setBgSettingsOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [quickOpenOpen, setQuickOpenOpen] = useState(false)
   const resizing = useRef(false)
   const hasBackground = useBackgroundStore((s) => s.config.kind !== 'none')
   const loadBackground = useBackgroundStore((s) => s.load)
@@ -90,6 +95,42 @@ export default function App(): JSX.Element {
     window.addEventListener('mouseup', handleUp)
   }, [])
 
+  useEffect(() => {
+    if (!rootPath) return
+    const handleKey = (e: KeyboardEvent): void => {
+      const mod = e.ctrlKey || e.metaKey
+      if (mod && e.shiftKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault()
+        setQuickOpenOpen(false)
+        setSearchOpen((v) => !v)
+      } else if (mod && e.key.toLowerCase() === 'p') {
+        e.preventDefault()
+        setSearchOpen(false)
+        setQuickOpenOpen((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [rootPath])
+
+  const openSearchResult = useCallback(
+    (file: string, line: number) => {
+      setPreview(file, line)
+      setView('preview')
+      setSearchOpen(false)
+    },
+    [setPreview]
+  )
+
+  const openQuickOpenResult = useCallback(
+    (file: string) => {
+      setPreview(file)
+      setView('preview')
+      setQuickOpenOpen(false)
+    },
+    [setPreview]
+  )
+
   if (!ready) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-base-900">
@@ -149,6 +190,16 @@ export default function App(): JSX.Element {
           </button>
           <div className="flex-1" />
           <button
+            title="Buscar no projeto (Ctrl+Shift+F)"
+            className={`rounded p-1 hover:bg-base-700/60 ${searchOpen ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
+            onClick={() => {
+              setQuickOpenOpen(false)
+              setSearchOpen((v) => !v)
+            }}
+          >
+            <Search size={14} />
+          </button>
+          <button
             title="Aparência — fundo personalizável"
             className={`rounded p-1 hover:bg-base-700/60 ${bgSettingsOpen ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
             onClick={() => setBgSettingsOpen((v) => !v)}
@@ -173,6 +224,8 @@ export default function App(): JSX.Element {
         </div>
       </div>
       {bgSettingsOpen && <BackgroundSettings onClose={() => setBgSettingsOpen(false)} />}
+      {searchOpen && <SearchPanel onClose={() => setSearchOpen(false)} onOpenResult={openSearchResult} />}
+      {quickOpenOpen && <QuickOpen onClose={() => setQuickOpenOpen(false)} onOpenResult={openQuickOpenResult} />}
     </div>
   )
 }

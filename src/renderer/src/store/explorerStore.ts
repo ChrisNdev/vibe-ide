@@ -10,6 +10,10 @@ interface ExplorerState {
   selectedPath: string | null
   /** file currently shown in the local, zero-token Preview pane */
   previewPath: string | null
+  /** 1-based line to scroll to on open — e.g. from a search result */
+  previewLine: number | null
+  /** bumped on every setPreview call so PreviewPane re-scrolls even when clicking a different match in the same file */
+  previewNonce: number
   gitStatus: GitStatusMap
   dirtyDirs: Set<string>
   isGitRepo: boolean
@@ -23,7 +27,7 @@ interface ExplorerState {
   handleFsEvent: (path: string) => void
   refreshGitStatus: () => Promise<void>
   setSelected: (path: string | null) => void
-  setPreview: (path: string | null) => void
+  setPreview: (path: string | null, line?: number) => void
 }
 
 let gitRefreshTimer: ReturnType<typeof setTimeout> | null = null
@@ -50,6 +54,8 @@ export const useExplorerStore = create<ExplorerState>((set, get) => ({
   expanded: new Set(),
   selectedPath: null,
   previewPath: null,
+  previewLine: null,
+  previewNonce: 0,
   gitStatus: {},
   dirtyDirs: new Set(),
   isGitRepo: false,
@@ -66,6 +72,7 @@ export const useExplorerStore = create<ExplorerState>((set, get) => ({
       expanded: new Set([root]),
       selectedPath: null,
       previewPath: null,
+      previewLine: null,
       gitStatus: {},
       dirtyDirs: new Set(),
       isGitRepo: false,
@@ -139,5 +146,5 @@ export const useExplorerStore = create<ExplorerState>((set, get) => ({
   },
 
   setSelected: (path) => set({ selectedPath: path }),
-  setPreview: (path) => set({ previewPath: path })
+  setPreview: (path, line) => set((state) => ({ previewPath: path, previewLine: line ?? null, previewNonce: state.previewNonce + 1 }))
 }))

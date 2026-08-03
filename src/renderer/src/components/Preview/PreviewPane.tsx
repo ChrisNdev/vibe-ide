@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { FileText, GitCompare, Copy, Eye } from 'lucide-react'
 import type { FileReadResult, GitFileStatus } from '@shared/types'
 import { useExplorerStore } from '@renderer/store/explorerStore'
@@ -17,6 +17,8 @@ const DIFFABLE = new Set<GitFileStatus>(['modified', 'added', 'deleted', 'rename
 
 export default function PreviewPane({ active }: PreviewPaneProps): JSX.Element {
   const previewPath = useExplorerStore((s) => s.previewPath)
+  const previewLine = useExplorerStore((s) => s.previewLine)
+  const previewNonce = useExplorerStore((s) => s.previewNonce)
   const rootPath = useExplorerStore((s) => s.rootPath)
   const status = useExplorerStore((s) => (s.previewPath ? s.gitStatus[s.previewPath] : undefined))
 
@@ -151,7 +153,7 @@ export default function PreviewPane({ active }: PreviewPaneProps): JSX.Element {
           </div>
         )}
         {previewPath && !loading && result && !result.binary && !result.truncated && mode === 'file' && (
-          <FileCodeView content={result.content} highlighted={highlighted} />
+          <FileCodeView content={result.content} highlighted={highlighted} targetLine={previewLine} nonce={previewNonce} />
         )}
         {previewPath && mode === 'diff' && (
           <DiffCodeView loading={diffLoading} lines={diffLines} />
@@ -161,13 +163,33 @@ export default function PreviewPane({ active }: PreviewPaneProps): JSX.Element {
   )
 }
 
-function FileCodeView({ content, highlighted }: { content: string; highlighted: string }): JSX.Element {
+function FileCodeView({
+  content,
+  highlighted,
+  targetLine,
+  nonce
+}: {
+  content: string
+  highlighted: string
+  targetLine: number | null
+  nonce: number
+}): JSX.Element {
   const lines = content.length ? content.split('\n') : []
+  const targetRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (targetLine) targetRef.current?.scrollIntoView({ block: 'center' })
+    // nonce forces a re-scroll when the same file/line is clicked again from a new search result
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetLine, nonce])
+
   return (
     <div className="flex h-full overflow-auto">
       <div className="select-none whitespace-pre-wrap bg-base-850 px-3 py-2 text-right font-mono text-[12px] leading-[1.6] tabular-nums text-base-500">
         {lines.map((_, i) => (
-          <div key={i}>{i + 1}</div>
+          <div key={i} ref={i + 1 === targetLine ? targetRef : undefined} className={i + 1 === targetLine ? 'bg-ink-yellow/15' : ''}>
+            {i + 1}
+          </div>
         ))}
       </div>
       <pre className="min-w-0 flex-1 overflow-visible px-3 py-2 font-mono text-[12px] leading-[1.6]">
