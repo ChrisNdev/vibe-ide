@@ -8,6 +8,7 @@ import { CanvasAddon } from '@xterm/addon-canvas'
 import '@xterm/xterm/css/xterm.css'
 import { xtermTheme } from './xtermTheme'
 import { useTerminalStore } from '@renderer/store/terminalStore'
+import { useBackgroundStore } from '@renderer/store/backgroundStore'
 
 /**
  * Loads the fastest renderer the GPU/driver will tolerate. WebGL is far
@@ -15,14 +16,24 @@ import { useTerminalStore } from '@renderer/store/terminalStore'
  * canvas is the safe middle ground; DOM is the last resort. Either
  * accelerated addon can throw on context loss, so it self-heals by falling
  * back one tier rather than leaving the terminal blank.
+ *
+ * preferCanvas is the ONLY thing the "terminal translúcido" setting changes here:
+ * it skips straight to Canvas instead of WebGL. It does NOT enable
+ * allowTransparency — INVARIANTES forbids that unconditionally, on either
+ * renderer — so the canvas paints solid pixels either way. Canvas is just the
+ * renderer the setting names in docs/PLANO.md; it's still fully opaque.
  */
-function loadFastestRenderer(term: XTerm): void {
+function loadFastestRenderer(term: XTerm, preferCanvas: boolean): void {
   const tryCanvas = (): void => {
     try {
       term.loadAddon(new CanvasAddon())
     } catch {
       // fall back to the built-in DOM renderer
     }
+  }
+  if (preferCanvas) {
+    tryCanvas()
+    return
   }
   try {
     const webgl = new WebglAddon()
@@ -58,10 +69,18 @@ export default function TerminalPane({
   const fitAddonRef = useRef<FitAddon | null>(null)
   const searchAddonRef = useRef<SearchAddon | null>(null)
   const updateTab = useTerminalStore((s) => s.updateTab)
+  const hasBackground = useBackgroundStore((s) => s.config.kind !== 'none')
+  const terminalBg = useBackgroundStore((s) => s.terminalBackgroundHex())
 
   useEffect(() => {
     if (!containerRef.current) return
     let disposed = false
+
+    // Read once at mount via getState() (not the reactive hook) — this effect only
+    // runs on [id], same as fontSize below; live background changes are applied by
+    // the separate effect further down instead of recreating the terminal/pty.
+    const bg = useBackgroundStore.getState()
+    const initialTheme = bg.config.kind !== 'none' ? { ...xtermTheme, background: bg.terminalBackgroundHex(), cursorAccent: bg.terminalBackgroundHex() } : xtermTheme
 
     const term = new XTerm({
       fontFamily: '"Commit Mono", ui-monospace, monospace',
@@ -70,8 +89,10 @@ export default function TerminalPane({
       cursorBlink: true,
       cursorStyle: 'bar',
       scrollback: 8000,
-      theme: xtermTheme,
+      theme: initialTheme,
       allowProposedApi: true
+      // allowTransparency intentionally omitted (defaults to false) — INVARIANTES:
+      // never enable it on the terminal, on either renderer.
     })
 
     const fitAddon = new FitAddon()
@@ -90,7 +111,7 @@ export default function TerminalPane({
     // render loop running — without this guard, the throwaway first instance's
     // loop can fire after its own disposal and throw reading a torn-down core.
     requestAnimationFrame(() => {
-      if (!disposed) loadFastestRenderer(term)
+      if (!disposed) loadFastestRenderer(term, bg.config.terminalTranslucent)
     })
 
     xtermRef.current = term
@@ -161,9 +182,16 @@ export default function TerminalPane({
     fitAddonRef.current?.fit()
   }, [fontSize])
 
+  // Live theme update when the background config changes — mutates the running
+  // terminal's options instead of recreating it (which would kill the pty).
+  useEffect(() => {
+    if (!xtermRef.current) return
+    xtermRef.current.options.theme = hasBackground ? { ...xtermTheme, background: terminalBg, cursorAccent: terminalBg } : xtermTheme
+  }, [hasBackground, terminalBg])
+
   return (
     <div
-      className="h-full w-full px-3 py-2"
+      className="surface h-full w-full px-3 py-2"
       style={{ display: active ? 'block' : 'none' }}
       onClick={() => xtermRef.current?.focus()}
     >

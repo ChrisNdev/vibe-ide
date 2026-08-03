@@ -1,0 +1,49 @@
+/**
+ * Fundo personalizável (docs/PLANO.md → FASE 2). Layer model:
+ *
+ *   L0  mídia        .bg-l0   — fixed, full-bleed, GPU-composited (transform only)
+ *   L1  véu          .bg-l1   — --substrate at --veil opacity, guarantees contrast
+ *   L2  superfícies  .surface — opt-in per panel container, ONE backdrop-filter each,
+ *                                never per row/node (hard perf rule)
+ *   L3  conteúdo     (default) — text/ink stay 100% opaque, untouched by any of this
+ *
+ * Everything here is inert until the root carries .has-background — with no
+ * background active, panels render exactly as Fase 1 left them.
+ */
+
+:root {
+  --bg-blur: 24px;
+  --bg-scale: 1.04; /* avoids the blurred layer's edge showing at the viewport border */
+  --veil: 0.72;
+  --surface-alpha: 0.78;
+  --spot: #c4457f;
+}
+
+/* Negative z-index — reliably behind unpositioned in-flow content regardless of
+   which stacking context these fixed layers land in (no ancestor needs position:relative). */
+.bg-l0 {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transform: scale(var(--bg-scale)) translateZ(0);
+  will-change: transform;
+  pointer-events: none;
+}
+
+.bg-l1 {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--substrate);
+  opacity: var(--veil);
+  pointer-events: none;
+}
+
+/* L2 — opt-in per panel container. One backdrop-filter each; rows/nodes inside stay fully transparent. */
+.has-background .surface {
+  background: color-mix(in srgb, var(--panel) calc(var(--surface-alpha) * 100%), transparent);
+  backdrop-filter: blur(12px);
+}

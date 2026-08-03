@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette } from 'lucide-react'
 import TerminalPane from './components/Terminal/Terminal'
 import FileExplorer from './components/Explorer/FileExplorer'
 import MindMap from './components/MindMap/MindMap'
 import PreviewPane from './components/Preview/PreviewPane'
 import WelcomeScreen from './components/Welcome/WelcomeScreen'
 import UpdateChecker from './components/UpdateChecker/UpdateChecker'
+import BackgroundLayer from './components/Background/BackgroundLayer'
+import BackgroundSettings from './components/Background/BackgroundSettings'
 import { useTerminalStore, nextTerminalId } from './store/terminalStore'
 import { useExplorerStore } from './store/explorerStore'
+import { useBackgroundStore } from './store/backgroundStore'
 
 type MainView = 'terminal' | 'mindmap' | 'preview'
 
@@ -24,7 +27,10 @@ export default function App(): JSX.Element {
   const [sidebarWidth, setSidebarWidth] = useState(280)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [view, setView] = useState<MainView>('terminal')
+  const [bgSettingsOpen, setBgSettingsOpen] = useState(false)
   const resizing = useRef(false)
+  const hasBackground = useBackgroundStore((s) => s.config.kind !== 'none')
+  const loadBackground = useBackgroundStore((s) => s.load)
 
   useEffect(() => {
     let cancelled = false
@@ -35,10 +41,11 @@ export default function App(): JSX.Element {
       setSidebarCollapsed(settings.sidebarCollapsed)
       setReady(true)
     })()
+    void loadBackground()
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [loadBackground])
 
   const openProject = useCallback(
     async (path: string): Promise<void> => {
@@ -96,10 +103,11 @@ export default function App(): JSX.Element {
   }
 
   return (
-    <div className="flex h-full w-full bg-base-900">
+    <div className={`flex h-full w-full ${hasBackground ? 'has-background' : 'bg-base-900'}`}>
+      <BackgroundLayer />
       {!sidebarCollapsed && (
         <>
-          <div style={{ width: sidebarWidth }} className="flex h-full shrink-0 flex-col">
+          <div style={{ width: sidebarWidth }} className="surface flex h-full shrink-0 flex-col">
             <FileExplorer />
           </div>
           <div
@@ -140,6 +148,13 @@ export default function App(): JSX.Element {
             <Eye size={14} />
           </button>
           <div className="flex-1" />
+          <button
+            title="Aparência — fundo personalizável"
+            className={`rounded p-1 hover:bg-base-700/60 ${bgSettingsOpen ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
+            onClick={() => setBgSettingsOpen((v) => !v)}
+          >
+            <Palette size={14} />
+          </button>
           <UpdateChecker />
         </div>
         <div className="min-h-0 flex-1 overflow-hidden">
@@ -157,6 +172,7 @@ export default function App(): JSX.Element {
           <PreviewPane active={view === 'preview'} />
         </div>
       </div>
+      {bgSettingsOpen && <BackgroundSettings onClose={() => setBgSettingsOpen(false)} />}
     </div>
   )
 }

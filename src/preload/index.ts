@@ -12,10 +12,15 @@ import {
   ProjectGraph,
   FileReadResult,
   UpdateCheckResult,
-  UpdateInstallResult
+  UpdateInstallResult,
+  BackgroundConfig,
+  BackgroundImageResult,
+  ThemeExportResult,
+  ThemeImportResult
 } from '../shared/types'
 
 const api = {
+  platform: process.platform,
   dialog: {
     openFolder: (): Promise<string | null> => ipcRenderer.invoke(IPC.DIALOG_OPEN_FOLDER)
   },
@@ -94,6 +99,20 @@ const api = {
   },
   graph: {
     build: (rootPath: string): Promise<ProjectGraph> => ipcRenderer.invoke(IPC.GRAPH_BUILD, rootPath)
+  },
+  background: {
+    pickImage: (bg: Pick<BackgroundConfig, 'blur' | 'brightness' | 'saturation'>): Promise<BackgroundImageResult | null> =>
+      ipcRenderer.invoke(IPC.BACKGROUND_PICK_IMAGE, bg),
+    remove: (): Promise<void> => ipcRenderer.invoke(IPC.BACKGROUND_REMOVE),
+    regenerate: (
+      id: string,
+      bg: Pick<BackgroundConfig, 'blur' | 'brightness' | 'saturation'>
+    ): Promise<BackgroundImageResult | null> => ipcRenderer.invoke(IPC.BACKGROUND_REGENERATE, id, bg)
+  },
+  theme: {
+    export: (name: string, tokens: Record<string, string>, background: BackgroundConfig): Promise<ThemeExportResult> =>
+      ipcRenderer.invoke(IPC.THEME_EXPORT, name, tokens, background),
+    import: (): Promise<ThemeImportResult> => ipcRenderer.invoke(IPC.THEME_IMPORT)
   }
 }
 

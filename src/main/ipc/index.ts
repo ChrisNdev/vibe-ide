@@ -3,6 +3,7 @@ import { registerGitHandlers } from './git'
 import { registerPtyHandlers } from './pty'
 import { registerSettingsHandlers } from './settings'
 import { registerGraphHandlers } from './graph'
+import { registerBackgroundHandlers } from './background'
 
 export function registerIpcHandlers(): void {
   registerFsHandlers()
@@ -10,4 +11,5 @@ export function registerIpcHandlers(): void {
   registerPtyHandlers()
   registerSettingsHandlers()
   registerGraphHandlers()
+  registerBackgroundHandlers()
 }

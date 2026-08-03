@@ -6,7 +6,7 @@ import fs from 'fs/promises'
 import { execFile, spawn } from 'child_process'
 import { promisify } from 'util'
 import { IPC, AppSettings, RecentProject, UpdateCheckResult, UpdateInstallResult } from '../../shared/types'
-import { store } from '../store'
+import { store, getSettings } from '../store'
 
 const execFileAsync = promisify(execFile)
 
@@ -38,11 +38,11 @@ function compareVersions(a: string, b: string): number {
 
 export function registerSettingsHandlers(): void {
   ipcMain.handle(IPC.SETTINGS_GET, async (): Promise<AppSettings> => {
-    return store.get('settings')
+    return getSettings()
   })
 
   ipcMain.handle(IPC.SETTINGS_SET, async (_e, partial: Partial<AppSettings>) => {
-    const current = store.get('settings')
+    const current = getSettings()
     store.set('settings', { ...current, ...partial })
     return store.get('settings')
   })

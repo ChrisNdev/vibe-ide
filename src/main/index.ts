@@ -1,8 +1,10 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, protocol } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc'
 import { killAllPtys } from './pty-manager'
+import { registerBackgroundProtocol } from './background-processor'
+import { getSettings } from './store'
 
 // Some machines (VMs, RDP sessions, IoT/embedded Windows editions) have a GPU
 // process that never produces a composited frame, which means the window's
@@ -10,7 +12,21 @@ import { killAllPtys } from './pty-manager'
 // rendering avoids that hang.
 app.disableHardwareAcceleration()
 
+// file:// doesn't resolve with sandbox: true, so background images are served over
+// our own scheme. Must be flagged privileged before the app is ready; the actual
+// request handler (registerBackgroundProtocol) is wired up after.
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'vibe', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }
+])
+
 function createWindow(): BrowserWindow {
+  const { useSystemWallpaper } = getSettings().background
+  // Mica needs the DWM compositor, which needs hardware acceleration — and that's
+  // disabled above for VM/RDP compatibility, so this option is a documented no-op
+  // there. It only actually renders on real Windows 11 hardware in the future if
+  // that tradeoff changes; wiring it now still saves the setting correctly.
+  const useMica = process.platform === 'win32' && useSystemWallpaper
+
   const win = new BrowserWindow({
     width: 1440,
     height: 900,
@@ -27,6 +43,7 @@ function createWindow(): BrowserWindow {
       symbolColor: '#8a8378',
       height: 36
     },
+    ...(useMica ? { backgroundMaterial: 'mica' as const, transparent: true } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       nodeIntegration: false,
@@ -71,6 +88,7 @@ app.whenReady().then(() => {
   })
 
   registerIpcHandlers()
+  registerBackgroundProtocol()
   createWindow()
 
   app.on('activate', () => {

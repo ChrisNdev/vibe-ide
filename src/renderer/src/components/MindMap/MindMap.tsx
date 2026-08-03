@@ -296,7 +296,7 @@ export default function MindMap({ rootPath, active }: MindMapProps): JSX.Element
           Reconstruir
         </button>
       </div>
-      <div ref={containerRef} className="relative min-h-0 flex-1 overflow-hidden bg-base-900">
+      <div ref={containerRef} className="surface relative min-h-0 flex-1 overflow-hidden bg-base-900">
         {!rootPath && (
           <div className="flex h-full items-center justify-center text-xs text-base-400">
             Abra uma pasta para ver o mapa mental.
