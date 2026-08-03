@@ -1,6 +1,8 @@
 import { spawn, ChildProcessByStdio, execFile } from 'child_process'
 import { promisify } from 'util'
 import path from 'path'
+import fsSync from 'fs'
+import { app } from 'electron'
 import type { Readable } from 'stream'
 import { SearchOptions, SearchMatch } from '../shared/types'
 
@@ -9,16 +11,38 @@ const execFileAsync = promisify(execFile)
 /**
  * @vscode/ripgrep ships as a pure ESM package ("type": "module") with no CJS
  * build, so it can't be `require()`d from this CJS main-process bundle. Its
- * own lib/index.js does nothing more than this require.resolve() against the
- * platform-specific optionalDependency — replicated here instead of importing it.
+ * own lib/index.js does nothing more than a require.resolve() against the
+ * platform-specific optionalDependency — that alone isn't enough in a packaged
+ * build though: electron-builder auto-unpacks rg.exe from the asar (it can't
+ * run from inside the archive), and npm nests that optionalDependency under
+ * @vscode/ripgrep's own node_modules instead of hoisting it, so require.resolve()
+ * from this bundle's location misses it entirely. Resolved lazily (not at module
+ * load) so a resolution miss degrades to "search returns nothing" instead of
+ * crashing the whole app on startup.
  */
 function resolveRgPath(): string {
   const binaryName = process.platform === 'win32' ? 'rg.exe' : 'rg'
   const platformPkg = `@vscode/ripgrep-${process.platform}-${process.arch}`
-  return require.resolve(`${platformPkg}/bin/${binaryName}`)
+  if (app.isPackaged) {
+    const candidates = [
+      path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', '@vscode', 'ripgrep', 'node_modules', platformPkg, 'bin', binaryName),
+      path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', platformPkg, 'bin', binaryName)
+    ]
+    const found = candidates.find((c) => fsSync.existsSync(c))
+    if (found) return found
+  }
+  try {
+    return require.resolve(`${platformPkg}/bin/${binaryName}`)
+  } catch {
+    return binaryName // last resort: hope it's on PATH — spawn/execFile's own error handling takes it from here
+  }
 }
 
-const rgPath = resolveRgPath()
+let cachedRgPath: string | null = null
+function getRgPath(): string {
+  if (!cachedRgPath) cachedRgPath = resolveRgPath()
+  return cachedRgPath
+}
 
 const MAX_RESULTS = 500
 /** How often partial matches get flushed to the renderer — keeps a 10k-file repo feeling instant without a message per match. */
@@ -91,7 +115,7 @@ export function runSearch(
   }
 
   // stdin: 'ignore' closes it immediately — belt-and-suspenders against the stdin-hang above.
-  const proc = spawn(rgPath, buildSearchArgs(opts), { cwd: rootPath, stdio: ['ignore', 'pipe', 'pipe'] })
+  const proc = spawn(getRgPath(), buildSearchArgs(opts), { cwd: rootPath, stdio: ['ignore', 'pipe', 'pipe'] })
   activeSearches.set(windowId, proc)
 
   let buffer = ''
@@ -151,7 +175,7 @@ export async function listFiles(rootPath: string): Promise<string[]> {
   try {
     // Explicit "." path for the same reason as buildSearchArgs above — avoids rg
     // second-guessing whether it should read the file list target from stdin.
-    const { stdout } = await execFileAsync(rgPath, ['--files', '.'], { cwd: rootPath, maxBuffer: 64 * 1024 * 1024 })
+    const { stdout } = await execFileAsync(getRgPath(), ['--files', '.'], { cwd: rootPath, maxBuffer: 64 * 1024 * 1024 })
     return stdout
       .split('\n')
       .map((l) => toPosix(l.trim()))

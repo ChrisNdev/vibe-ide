@@ -2,6 +2,12 @@
 
 Todas as mudanças notáveis do vibeIDE ficam registradas aqui. Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [1.3.1] — 2026-08-03
+
+### Corrigido
+
+- **App crashava ao abrir na versão instalada (build empacotada)** — `resolveRgPath()` (busca global, `Ctrl+Shift+F`) rodava no carregamento do módulo, antes até da janela abrir, e usava `require.resolve()` puro pra achar o binário do `rg.exe`. Isso funciona em dev porque o `@vscode/ripgrep-win32-x64` fica "hoisted" na raiz do `node_modules` — mas no build empacotado o npm o aninhou dentro de `@vscode/ripgrep/node_modules/...`, fora do caminho que o resolver checa a partir de `out/main/index.js`. A falha, sendo no topo do módulo, derrubava o processo principal inteiro com "A JavaScript error occurred in the main process". A resolução agora é preguiçosa (só roda quando a busca é usada de verdade) e, no build empacotado, monta o caminho real via `process.resourcesPath` + `app.asar.unpacked` em vez de confiar cegamente no `require.resolve`.
+
 ## [1.3.0] — 2026-08-03
 
 ### Rodar mais de um agente sem virar caos
