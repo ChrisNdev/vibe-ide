@@ -6,6 +6,7 @@ import { registerGraphHandlers } from './graph'
 import { registerBackgroundHandlers } from './background'
 import { registerSearchHandlers } from './search'
 import { registerHooksHandlers } from './hooks'
+import { registerTranscriptHandlers } from './transcript'
 
 export function registerIpcHandlers(): void {
   registerFsHandlers()
@@ -16,4 +17,5 @@ export function registerIpcHandlers(): void {
   registerBackgroundHandlers()
   registerSearchHandlers()
   registerHooksHandlers()
+  registerTranscriptHandlers()
 }

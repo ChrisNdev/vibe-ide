@@ -22,7 +22,9 @@ import {
   SearchDoneEvent,
   HookEvent,
   HooksInstallResult,
-  HooksStatus
+  HooksStatus,
+  TranscriptState,
+  TranscriptSessionSummary
 } from '../shared/types'
 
 const api = {
@@ -143,6 +145,16 @@ const api = {
       const listener = (_e: Electron.IpcRendererEvent, evt: HookEvent): void => cb(evt)
       ipcRenderer.on(IPC.HOOKS_EVENT, listener)
       return () => ipcRenderer.removeListener(IPC.HOOKS_EVENT, listener)
+    }
+  },
+  transcript: {
+    watch: (rootPath: string): Promise<{ ok: boolean; sessionId?: string }> => ipcRenderer.invoke(IPC.TRANSCRIPT_WATCH, rootPath),
+    unwatch: (): Promise<void> => ipcRenderer.invoke(IPC.TRANSCRIPT_UNWATCH),
+    listSessions: (rootPath: string): Promise<TranscriptSessionSummary[]> => ipcRenderer.invoke(IPC.TRANSCRIPT_LIST_SESSIONS, rootPath),
+    onUpdate: (cb: (state: TranscriptState) => void): (() => void) => {
+      const listener = (_e: Electron.IpcRendererEvent, state: TranscriptState): void => cb(state)
+      ipcRenderer.on(IPC.TRANSCRIPT_UPDATE, listener)
+      return () => ipcRenderer.removeListener(IPC.TRANSCRIPT_UPDATE, listener)
     }
   }
 }

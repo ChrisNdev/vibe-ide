@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search, Bell } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search, Bell, Activity } from 'lucide-react'
 import TerminalPane from './components/Terminal/Terminal'
 import FileExplorer from './components/Explorer/FileExplorer'
 import MindMap from './components/MindMap/MindMap'
@@ -12,11 +12,13 @@ import SearchPanel from './components/Search/SearchPanel'
 import QuickOpen from './components/Search/QuickOpen'
 import HooksSettings from './components/Hooks/HooksSettings'
 import ControlStrip from './components/Hooks/ControlStrip'
+import ActivityPanel from './components/Activity/ActivityPanel'
 import { useTerminalStore, nextTerminalId } from './store/terminalStore'
 import { useExplorerStore } from './store/explorerStore'
 import { useBackgroundStore } from './store/backgroundStore'
+import { useActivityStore, ensureTranscriptSubscription } from './store/activityStore'
 
-type MainView = 'terminal' | 'mindmap' | 'preview'
+type MainView = 'terminal' | 'mindmap' | 'preview' | 'activity'
 
 const MIN_SIDEBAR_WIDTH = 180
 const MAX_SIDEBAR_WIDTH = 560
@@ -50,10 +52,16 @@ export default function App(): JSX.Element {
       setReady(true)
     })()
     void loadBackground()
+    ensureTranscriptSubscription()
     return () => {
       cancelled = true
     }
   }, [loadBackground])
+
+  useEffect(() => {
+    if (!rootPath) return
+    void useActivityStore.getState().start(rootPath)
+  }, [rootPath])
 
   const openProject = useCallback(
     async (path: string): Promise<void> => {
@@ -191,6 +199,13 @@ export default function App(): JSX.Element {
           >
             <Eye size={14} />
           </button>
+          <button
+            title="Atividade — o que o agente está fazendo, tokens e custo"
+            className={`rounded p-1 hover:bg-base-700/60 ${view === 'activity' ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
+            onClick={() => setView('activity')}
+          >
+            <Activity size={14} />
+          </button>
           <div className="flex-1" />
           <ControlStrip />
           <button
@@ -225,13 +240,14 @@ export default function App(): JSX.Element {
               key={tab.id}
               id={tab.id}
               cwd={tab.cwd}
-              autoRun="claude"
+              autoRun={tab.autoRunCommand ?? (tab.kind === 'claude' ? 'claude' : undefined)}
               fontSize={14}
               active={view === 'terminal' && tab.id === activeTabId}
             />
           ))}
           <MindMap rootPath={rootPath} active={view === 'mindmap'} />
           <PreviewPane active={view === 'preview'} />
+          <ActivityPanel active={view === 'activity'} onResumed={() => setView('terminal')} />
         </div>
       </div>
       {bgSettingsOpen && <BackgroundSettings onClose={() => setBgSettingsOpen(false)} />}

@@ -8,6 +8,8 @@ export interface TerminalTab {
   shellId: string | null
   isRunning: boolean
   exitCode: number | null
+  /** overrides the default "claude" autoRun — e.g. "claude --resume <id>" */
+  autoRunCommand?: string
 }
 
 interface TerminalState {

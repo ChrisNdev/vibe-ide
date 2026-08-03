@@ -235,6 +235,51 @@ export interface NotificationSettings {
   sound: boolean
 }
 
+export interface TranscriptToolCall {
+  id: string
+  uuid: string
+  name: string
+  input: Record<string, unknown>
+  timestamp: string
+  isSidechain: boolean
+  isError: boolean
+}
+
+export interface TranscriptTodo {
+  content: string
+  status: 'pending' | 'in_progress' | 'completed'
+  activeForm?: string
+}
+
+export interface TranscriptUsagePoint {
+  timestamp: string
+  inputTokens: number
+  outputTokens: number
+  cacheCreationTokens: number
+  cacheReadTokens: number
+}
+
+export interface TranscriptState {
+  sessionId: string
+  toolCalls: TranscriptToolCall[]
+  todos: TranscriptTodo[]
+  usage: TranscriptUsagePoint[]
+  /** absolute paths read/edited by tool calls this session — feeds the "tocado pelo agente" badge */
+  touchedFiles: string[]
+  totalLines: number
+  failedLines: number
+  /** true once failedLines/totalLines crosses 20% — renderer shows "formato não reconhecido" and stops trying to render the rest */
+  unrecognizedFormat: boolean
+}
+
+export interface TranscriptSessionSummary {
+  id: string
+  mtimeMs: number
+  sizeBytes: number
+  firstUserMessage: string | null
+  gitBranch: string | null
+}
+
 export const IPC = {
   DIALOG_OPEN_FOLDER: 'dialog:openFolder',
   FS_READ_DIR: 'fs:readDir',
@@ -287,5 +332,9 @@ export const IPC = {
   HOOKS_INSTALL: 'hooks:install',
   HOOKS_UNINSTALL: 'hooks:uninstall',
   HOOKS_STATUS: 'hooks:status',
-  HOOKS_EVENT: 'hooks:event'
+  HOOKS_EVENT: 'hooks:event',
+  TRANSCRIPT_WATCH: 'transcript:watch',
+  TRANSCRIPT_UNWATCH: 'transcript:unwatch',
+  TRANSCRIPT_LIST_SESSIONS: 'transcript:listSessions',
+  TRANSCRIPT_UPDATE: 'transcript:update'
 } as const

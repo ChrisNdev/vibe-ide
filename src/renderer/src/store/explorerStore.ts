@@ -20,8 +20,11 @@ interface ExplorerState {
   gitBranch: string | null
   gitAhead: number
   gitBehind: number
+  /** absolute paths the agent has read/edited this session — feeds the tree's "tocado" badge */
+  touchedFiles: Set<string>
 
   setRoot: (root: string) => Promise<void>
+  setTouchedFiles: (files: Set<string>) => void
   toggleExpand: (dirPath: string) => void
   loadDir: (dirPath: string, force?: boolean) => Promise<void>
   handleFsEvent: (path: string) => void
@@ -62,6 +65,7 @@ export const useExplorerStore = create<ExplorerState>((set, get) => ({
   gitBranch: null,
   gitAhead: 0,
   gitBehind: 0,
+  touchedFiles: new Set(),
 
   setRoot: async (root) => {
     const prevRoot = get().rootPath
@@ -78,7 +82,8 @@ export const useExplorerStore = create<ExplorerState>((set, get) => ({
       isGitRepo: false,
       gitBranch: null,
       gitAhead: 0,
-      gitBehind: 0
+      gitBehind: 0,
+      touchedFiles: new Set()
     })
     await window.api.fs.watch(root)
     await get().loadDir(root)
@@ -145,6 +150,7 @@ export const useExplorerStore = create<ExplorerState>((set, get) => ({
     }
   },
 
+  setTouchedFiles: (files) => set({ touchedFiles: files }),
   setSelected: (path) => set({ selectedPath: path }),
   setPreview: (path, line) => set((state) => ({ previewPath: path, previewLine: line ?? null, previewNonce: state.previewNonce + 1 }))
 }))

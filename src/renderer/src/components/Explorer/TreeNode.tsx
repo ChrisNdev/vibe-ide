@@ -53,6 +53,7 @@ export default function TreeNode(props: TreeNodeProps): JSX.Element {
   const loading = useExplorerStore((s) => s.loadingDirs.has(entry.path))
   const status = useExplorerStore((s) => s.gitStatus[entry.path])
   const dirty = useExplorerStore((s) => s.dirtyDirs.has(entry.path))
+  const touched = useExplorerStore((s) => s.touchedFiles.has(entry.path))
   const toggleExpand = useExplorerStore((s) => s.toggleExpand)
   const setSelected = useExplorerStore((s) => s.setSelected)
   const setPreview = useExplorerStore((s) => s.setPreview)
@@ -115,6 +116,11 @@ export default function TreeNode(props: TreeNodeProps): JSX.Element {
           <FileTypeTag name={entry.name} />
         )}
         <span className={`truncate ${statusClass(status)}`}>{entry.name}</span>
+        {!entry.isDirectory && touched && (
+          <span title={status !== undefined ? 'Tocado pelo agente + modificado' : 'Tocado pelo agente nesta sessão'}>
+            <Circle size={5} className={`shrink-0 ${status !== undefined ? 'fill-ink-overprint text-ink-overprint' : 'fill-ink-cyan text-ink-cyan'}`} />
+          </span>
+        )}
         {entry.isDirectory && dirty && !expanded && (
           <Circle size={5} className="ml-auto shrink-0 fill-warn text-warn" />
         )}
