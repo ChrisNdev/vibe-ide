@@ -2,6 +2,12 @@
 
 Todas as mudanças notáveis do vibeIDE ficam registradas aqui. Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [1.4.2] — 2026-08-04
+
+### Adicionado
+
+- **Copiar e colar de verdade no terminal** — Ctrl+C copia o texto selecionado (em vez de interromper o comando, que continua sendo o comportamento sem seleção); Ctrl+V cola, incluindo **imagens** — uma imagem no clipboard (print de tela, por exemplo) é salva como PNG temporário e o caminho é colado no prompt, do jeito que o Claude Code CLI reconhece uma imagem anexada.
+
 ## [1.4.1] — 2026-08-04
 
 ### Corrigido

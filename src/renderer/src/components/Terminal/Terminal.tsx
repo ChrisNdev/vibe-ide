@@ -47,6 +47,34 @@ function loadFastestRenderer(term: XTerm, preferCanvas: boolean): void {
   }
 }
 
+/**
+ * Ctrl+C copies the selection (matches VS Code/Windows Terminal); with nothing selected it
+ * falls through to xterm's default handling, which sends the raw byte — SIGINT, same as always.
+ * Ctrl+V pastes — xterm doesn't bind that key to anything by default. An image on the clipboard
+ * can't be dropped into a terminal grid, so it's saved to a temp PNG and pasted as a path instead
+ * (Claude Code CLI already treats an image path in the prompt as an attachment).
+ */
+function attachClipboardKeys(term: XTerm): void {
+  term.attachCustomKeyEventHandler((event) => {
+    if (event.type !== 'keydown' || event.altKey) return true
+    const mod = event.ctrlKey || event.metaKey
+    if (!mod) return true
+
+    if (event.key.toLowerCase() === 'c' && !event.shiftKey && term.hasSelection()) {
+      void navigator.clipboard.writeText(term.getSelection())
+      return false
+    }
+    if (event.key.toLowerCase() === 'v' && !event.shiftKey) {
+      void window.api.clipboard.readImageOrText().then((result) => {
+        if (result.kind === 'image') term.paste(result.path)
+        else if (result.kind === 'text') term.paste(result.text)
+      })
+      return false
+    }
+    return true
+  })
+}
+
 interface TerminalPaneProps {
   id: string
   cwd: string
@@ -100,6 +128,7 @@ export default function TerminalPane({
     term.loadAddon(fitAddon)
     term.loadAddon(searchAddon)
     term.loadAddon(new WebLinksAddon())
+    attachClipboardKeys(term)
 
     term.open(containerRef.current)
     // fit() must run first so the terminal has real character/dimension

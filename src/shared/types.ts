@@ -197,6 +197,9 @@ export interface PendingPatchNotes {
   releaseUrl: string | null
 }
 
+/** Result of reading the OS clipboard for a terminal paste — an image takes priority over text. */
+export type ClipboardPasteResult = { kind: 'image'; path: string } | { kind: 'text'; text: string } | { kind: 'empty' }
+
 export interface SearchOptions {
   query: string
   caseSensitive: boolean
@@ -411,6 +414,7 @@ export const IPC = {
   RECENTS_REMOVE: 'recents:remove',
   RECENTS_TOGGLE_PIN: 'recents:togglePin',
   CLIPBOARD_WRITE: 'clipboard:write',
+  CLIPBOARD_READ_IMAGE_OR_TEXT: 'clipboard:readImageOrText',
   APP_GET_VERSION: 'app:getVersion',
   APP_GET_HOME_DIR: 'app:getHomeDir',
   APP_CHECK_UPDATE: 'app:checkUpdate',

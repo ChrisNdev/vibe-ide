@@ -14,6 +14,7 @@ import {
   UpdateCheckResult,
   UpdateInstallResult,
   PendingPatchNotes,
+  ClipboardPasteResult,
   BackgroundConfig,
   BackgroundImageResult,
   ThemeExportResult,
@@ -109,7 +110,8 @@ const api = {
     togglePin: (path: string): Promise<RecentProject[]> => ipcRenderer.invoke(IPC.RECENTS_TOGGLE_PIN, path)
   },
   clipboard: {
-    writeText: (text: string): Promise<void> => ipcRenderer.invoke(IPC.CLIPBOARD_WRITE, text)
+    writeText: (text: string): Promise<void> => ipcRenderer.invoke(IPC.CLIPBOARD_WRITE, text),
+    readImageOrText: (): Promise<ClipboardPasteResult> => ipcRenderer.invoke(IPC.CLIPBOARD_READ_IMAGE_OR_TEXT)
   },
   app: {
     getVersion: (): Promise<string> => ipcRenderer.invoke(IPC.APP_GET_VERSION),

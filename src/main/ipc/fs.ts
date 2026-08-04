@@ -2,7 +2,8 @@ import { ipcMain, shell, clipboard, dialog, BrowserWindow } from 'electron'
 import fs from 'fs/promises'
 import fsSync from 'fs'
 import path from 'path'
-import { IPC, FileEntry, FileReadResult } from '../../shared/types'
+import os from 'os'
+import { IPC, FileEntry, FileReadResult, ClipboardPasteResult } from '../../shared/types'
 import { watchPath, unwatchPath, getWorkspaceRoot } from '../file-watcher'
 
 /** Above this, we don't even try to read the file into the preview pane — avoids choking the renderer on huge assets/logs. */
@@ -126,6 +127,21 @@ export function registerFsHandlers(): void {
 
   ipcMain.handle(IPC.CLIPBOARD_WRITE, async (_e, text: string) => {
     clipboard.writeText(text)
+  })
+
+  // Electron's own clipboard module reads images directly — no need for the renderer's
+  // Clipboard API (flakier permission/gesture rules for image reads in a sandboxed webview).
+  // The terminal itself can't display an image, so it's saved to a temp PNG and the path is
+  // pasted as text instead — Claude Code CLI already treats an image path in the prompt as an attachment.
+  ipcMain.handle(IPC.CLIPBOARD_READ_IMAGE_OR_TEXT, async (): Promise<ClipboardPasteResult> => {
+    const image = clipboard.readImage()
+    if (!image.isEmpty()) {
+      const tempPath = path.join(os.tmpdir(), `vibeide-paste-${Date.now()}.png`)
+      await fs.writeFile(tempPath, image.toPNG())
+      return { kind: 'image', path: tempPath }
+    }
+    const text = clipboard.readText()
+    return text ? { kind: 'text', text } : { kind: 'empty' }
   })
 
   ipcMain.handle(IPC.FS_READ_FILE, async (_e, filePath: string): Promise<FileReadResult> => {
