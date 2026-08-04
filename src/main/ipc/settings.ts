@@ -202,7 +202,12 @@ export function registerSettingsHandlers(): void {
       // The installer can't replace this process's own .exe while it's still running (Windows
       // file lock), so a detached helper waits for us to fully quit, installs silently, then
       // relaunches the (now updated) app. Runs independently of our process via detached+unref.
-      const script = `timeout /t 2 /nobreak >nul && "${installerPath}" /S && "${exePath}"`
+      // 6s, not 2 — this app has 4 processes (main/renderer/gpu/utility) plus before-quit cleanup
+      // (killAllPtys, stopHooksServer, stopMcpServer); 2s wasn't reliably enough for Windows to
+      // release the exe's file handle, and NSIS silently shows a "file in use" prompt when it isn't
+      // — which /S does NOT suppress, so the "silent" install just hangs waiting for a click no one
+      // sees since the old app already quit.
+      const script = `timeout /t 6 /nobreak >nul && "${installerPath}" /S && "${exePath}"`
       spawn('cmd.exe', ['/c', script], { detached: true, stdio: 'ignore', windowsHide: true }).unref()
 
       setTimeout(() => app.quit(), 300)

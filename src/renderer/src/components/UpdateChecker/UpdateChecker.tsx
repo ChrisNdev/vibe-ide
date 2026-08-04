@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DownloadCloud, Loader2, RotateCw } from 'lucide-react'
 import type { UpdateCheckResult } from '@shared/types'
 
@@ -18,6 +18,13 @@ export default function UpdateChecker(): JSX.Element {
       setChecking(false)
     }
   }
+
+  // Checks itself on mount instead of waiting for a click — otherwise an available update
+  // sits invisible behind a "verificar atualização" label nobody has a reason to click.
+  useEffect(() => {
+    void handleCheck()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleInstall = async (): Promise<void> => {
     if (!result?.latestTag || installing) return

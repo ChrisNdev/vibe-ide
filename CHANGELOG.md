@@ -2,6 +2,17 @@
 
 Todas as mudanças notáveis do vibeIDE ficam registradas aqui. Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [1.4.1] — 2026-08-04
+
+### Corrigido
+
+- **Atualização automática podia travar sem avisar** — o instalador rodava só 2s depois do app fechar, tempo insuficiente pra Windows liberar o arquivo `.exe` (4 processos + limpeza de hooks/MCP/pty no fechamento). Quando isso acontecia, o NSIS mostrava um aviso de "arquivo em uso" que `/S` (modo silencioso) não suprime — e como o app já tinha fechado, ninguém via esse aviso, então a atualização silenciosamente nunca terminava. Aumentado pra 6s.
+
+### Melhorado
+
+- **Botão de atualizar agora verifica sozinho** — antes só checava quando clicado, então uma atualização disponível ficava invisível atrás de um botão "verificar atualização" sem motivo pra clicar. Agora verifica ao abrir o app.
+- **Verificador de atualização também aparece na tela inicial** — antes só existia depois de abrir um projeto.
+
 ## [1.4.0] — 2026-08-03
 
 ### Visual — vidro por padrão

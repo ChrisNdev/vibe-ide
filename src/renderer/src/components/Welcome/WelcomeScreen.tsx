@@ -3,6 +3,7 @@ import { FolderOpen, Clock, Pin, X, Waypoints, RefreshCw, Sparkles } from 'lucid
 import type { RecentProject, PendingPatchNotes } from '@shared/types'
 import PatchNotesModal from '@renderer/components/PatchNotes/PatchNotesModal'
 import BackgroundLayer from '@renderer/components/Background/BackgroundLayer'
+import UpdateChecker from '@renderer/components/UpdateChecker/UpdateChecker'
 import { useBackgroundStore } from '@renderer/store/backgroundStore'
 
 interface WelcomeScreenProps {
@@ -139,13 +140,16 @@ export default function WelcomeScreen({ onOpen }: WelcomeScreenProps): JSX.Eleme
         )}
 
         {version && (
-          <div className="mt-8 flex items-center justify-center gap-1.5 text-[11px] text-base-500">
-            <span>vibeIDE v{version}</span>
-            <span className="text-base-700">·</span>
-            <button onClick={() => void showChangelog()} className="flex items-center gap-1 text-base-500 hover:text-accent" disabled={loadingChangelog}>
-              <Sparkles size={11} />
-              O que há de novo
-            </button>
+          <div className="mt-8 flex flex-col items-center gap-2">
+            <div className="flex items-center justify-center gap-1.5 text-[11px] text-base-500">
+              <span>vibeIDE v{version}</span>
+              <span className="text-base-700">·</span>
+              <button onClick={() => void showChangelog()} className="flex items-center gap-1 text-base-500 hover:text-accent" disabled={loadingChangelog}>
+                <Sparkles size={11} />
+                O que há de novo
+              </button>
+            </div>
+            <UpdateChecker />
           </div>
         )}
       </div>
