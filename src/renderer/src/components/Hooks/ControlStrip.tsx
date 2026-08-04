@@ -1,52 +1,44 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useActivityStore } from '@renderer/store/activityStore'
+
+/** Claude's standard context window (Sonnet/Opus). Accounts with the 1M beta will read low — no per-account limit is exposed anywhere to know better. */
+const CONTEXT_WINDOW = 200_000
 
 /**
- * "Tira de controle" — the design system's signature element (SISTEMA DE DESIGN →
- * Elemento assinatura). Full version reads context/tokens/git/erros (needs Fase
- * 5/8 data sources that don't exist yet); this is the "segundo consumidor" piece
- * Fase 4 asks for: UserPromptSubmit inks the strip, Stop snaps the registration
- * mark (⊕) into place.
+ * "Tira de controle" — the design system's signature element. Fill now tracks real
+ * context-window usage from the live transcript (input + cache tokens of the latest
+ * turn) instead of a decorative pulse; the ⊕ mark still flips while the agent is
+ * mid-turn (UserPromptSubmit → Stop) so "is Claude working" stays visible at a glance.
  */
 export default function ControlStrip(): JSX.Element {
-  const [progress, setProgress] = useState(0)
   const [registered, setRegistered] = useState(true)
-  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const usage = useActivityStore((s) => s.transcript?.usage)
 
   useEffect(() => {
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    const off = window.api.hooks.onEvent((evt) => {
-      if (evt.hook_event_name === 'UserPromptSubmit') {
-        if (resetTimer.current) clearTimeout(resetTimer.current)
-        if (holdTimer.current) clearTimeout(holdTimer.current)
-        setRegistered(false)
-        setProgress(reducedMotion ? 85 : 0)
-        if (!reducedMotion) {
-          holdTimer.current = setTimeout(() => setProgress(85), 30)
-        }
-      } else if (evt.hook_event_name === 'Stop') {
-        if (holdTimer.current) clearTimeout(holdTimer.current)
-        setProgress(100)
-        setRegistered(true)
-        resetTimer.current = setTimeout(() => setProgress(0), 700)
-      }
+    return window.api.hooks.onEvent((evt) => {
+      if (evt.hook_event_name === 'UserPromptSubmit') setRegistered(false)
+      else if (evt.hook_event_name === 'Stop') setRegistered(true)
     })
-    return () => {
-      off()
-      if (resetTimer.current) clearTimeout(resetTimer.current)
-      if (holdTimer.current) clearTimeout(holdTimer.current)
-    }
   }, [])
 
+  const last = usage && usage.length > 0 ? usage[usage.length - 1] : null
+  const tokensUsed = last ? last.inputTokens + last.cacheCreationTokens + last.cacheReadTokens : 0
+  const percent = Math.min(100, Math.round((tokensUsed / CONTEXT_WINDOW) * 100))
+  const barColor = percent >= 90 ? 'bg-danger' : percent >= 70 ? 'bg-ink-yellow' : 'bg-ink-cyan'
+
   return (
-    <div className="flex h-3 items-center gap-1.5 px-2" title="Tira de controle — entinta quando o agente trabalha, registra quando termina">
+    <div
+      className="flex h-3 items-center gap-1.5 px-2"
+      title={
+        last
+          ? `Contexto usado: ${tokensUsed.toLocaleString('pt-BR')} / ${CONTEXT_WINDOW.toLocaleString('pt-BR')} tokens (${percent}%)`
+          : 'Contexto — nenhuma atividade ainda nesta sessão'
+      }
+    >
       <div className="h-1 w-16 overflow-hidden rounded-sm bg-base-800">
-        <div
-          className="h-full bg-ink-cyan transition-[width] duration-[2500ms] ease-linear"
-          style={{ width: `${progress}%`, transitionDuration: progress === 100 || progress === 0 ? '80ms' : undefined }}
-        />
+        <div className={`h-full ${barColor} transition-[width] duration-300 ease-apple`} style={{ width: `${percent}%` }} />
       </div>
+      <span className="tabular-nums text-[10px] leading-none text-base-500">{percent}%</span>
       <span className={`text-[10px] leading-none ${registered ? 'text-muted' : 'text-ink-yellow'}`}>⊕</span>
     </div>
   )

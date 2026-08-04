@@ -2,6 +2,16 @@
 
 Todas as mudanças notáveis do vibeIDE ficam registradas aqui. Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [1.4.4] — 2026-08-04
+
+### Adicionado
+
+- **Pasta vazia = projeto novo** — ao abrir uma pasta sem nenhum arquivo, o Claude já entra perguntando o que você quer construir, em vez de esperar num prompt em branco sem contexto nenhum.
+
+### Melhorado
+
+- **Barra de controle mostra uso real de contexto** — antes era só um pulso decorativo que enchia e esvaziava a cada turno; agora o preenchimento reflete os tokens de fato usados na janela de contexto (entrada + cache) da última mensagem, com cor de aviso perto do limite.
+
 ## [1.4.3] — 2026-08-04
 
 ### Corrigido

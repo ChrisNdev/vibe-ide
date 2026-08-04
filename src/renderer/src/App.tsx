@@ -92,6 +92,14 @@ export default function App(): JSX.Element {
     async (path: string): Promise<void> => {
       await setRoot(path)
       void window.api.recents.add(path)
+      // Empty folder = new project: hand Claude a starter prompt instead of leaving
+      // a bare "claude" waiting for the user to explain what they just opened.
+      let isEmpty = false
+      try {
+        isEmpty = (await window.api.fs.readDir(path)).length === 0
+      } catch {
+        // can't tell — falls back to a bare `claude`, same as before
+      }
       addTab({
         id: nextTerminalId(),
         cwd: path,
@@ -99,7 +107,10 @@ export default function App(): JSX.Element {
         kind: 'claude',
         shellId: null,
         isRunning: true,
-        exitCode: null
+        exitCode: null,
+        autoRunCommand: isEmpty
+          ? 'claude "Pasta de projeto vazia. Pergunte o que eu quero construir aqui antes de criar qualquer arquivo."'
+          : undefined
       })
     },
     [setRoot, addTab]
