@@ -228,6 +228,17 @@ const api = {
       ipcRenderer.on(IPC.WORKTREE_STATUS_EVENT, listener)
       return () => ipcRenderer.removeListener(IPC.WORKTREE_STATUS_EVENT, listener)
     }
+  },
+  windowControls: {
+    minimize: (): Promise<void> => ipcRenderer.invoke(IPC.WINDOW_MINIMIZE),
+    toggleMaximize: (): Promise<void> => ipcRenderer.invoke(IPC.WINDOW_TOGGLE_MAXIMIZE),
+    close: (): Promise<void> => ipcRenderer.invoke(IPC.WINDOW_CLOSE),
+    isMaximized: (): Promise<boolean> => ipcRenderer.invoke(IPC.WINDOW_IS_MAXIMIZED),
+    onMaximizeChange: (cb: (maximized: boolean) => void): (() => void) => {
+      const listener = (_e: Electron.IpcRendererEvent, maximized: boolean): void => cb(maximized)
+      ipcRenderer.on(IPC.WINDOW_MAXIMIZE_CHANGED, listener)
+      return () => ipcRenderer.removeListener(IPC.WINDOW_MAXIMIZE_CHANGED, listener)
+    }
   }
 }
 

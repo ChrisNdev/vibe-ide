@@ -10,6 +10,7 @@ import { wireHookNotifications } from './notifications'
 import { wireCheckpointCreation } from './checkpoint-listener'
 import { startMcpServer, stopMcpServer } from './mcp-server'
 import { wireAgentBoard } from './agent-board'
+import { IPC } from '../shared/types'
 
 // Hardware acceleration is intentionally left ON. Some machines (VMs, RDP sessions,
 // IoT/embedded Windows editions) have a GPU process that never produces a composited
@@ -44,12 +45,12 @@ function createWindow(): BrowserWindow {
     // process can't read a CSS custom property, so the token's literal value lives here too.
     backgroundColor: '#1c1c1e',
     autoHideMenuBar: true,
+    // Fully frameless — no titleBarOverlay. That gave Windows a reserved 36px zone at the
+    // top-right for its own min/max/close, which collided with this app's own toolbar buttons
+    // living in the same corner (native chrome always painting on top, so nothing drawn there
+    // was reliably visible or clickable) and looked visually bolted-on next to the rest of the
+    // glass UI. TitleBar.tsx (renderer) draws real min/max/close now, matching the app itself.
     titleBarStyle: 'hidden',
-    titleBarOverlay: {
-      color: '#1c1c1e',
-      symbolColor: '#8e8e93',
-      height: 36
-    },
     ...(useMica ? { backgroundMaterial: 'mica' as const, transparent: true } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -81,6 +82,12 @@ function createWindow(): BrowserWindow {
       if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(url)) navEvent.preventDefault()
     })
   })
+
+  // Keeps TitleBar.tsx's maximize/restore icon in sync, including when the user double-clicks
+  // the title bar or drags the window to a screen edge (Windows' own snap gesture) — neither
+  // goes through the toggleMaximize IPC call, so the renderer needs to be told, not asked.
+  win.on('maximize', () => win.webContents.send(IPC.WINDOW_MAXIMIZE_CHANGED, true))
+  win.on('unmaximize', () => win.webContents.send(IPC.WINDOW_MAXIMIZE_CHANGED, false))
 
   const showOnce = (): void => {
     if (!win.isDestroyed() && !win.isVisible()) win.show()

@@ -463,5 +463,10 @@ export const IPC = {
   WORKTREE_REMOVE: 'worktree:remove',
   WORKTREE_DIFF: 'worktree:diff',
   WORKTREE_MERGE: 'worktree:merge',
-  WORKTREE_STATUS_EVENT: 'worktree:statusEvent'
+  WORKTREE_STATUS_EVENT: 'worktree:statusEvent',
+  WINDOW_MINIMIZE: 'window:minimize',
+  WINDOW_TOGGLE_MAXIMIZE: 'window:toggleMaximize',
+  WINDOW_CLOSE: 'window:close',
+  WINDOW_IS_MAXIMIZED: 'window:isMaximized',
+  WINDOW_MAXIMIZE_CHANGED: 'window:maximizeChanged'
 } as const

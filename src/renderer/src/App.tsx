@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search, Bell, Activity, Camera, Plug, FlaskConical, GitBranch, MoreHorizontal } from 'lucide-react'
 import MoreMenu from './components/ui/MoreMenu'
 import OnboardingModal from './components/Onboarding/OnboardingModal'
+import TitleBar from './components/TitleBar/TitleBar'
 import TerminalPane from './components/Terminal/Terminal'
 import FileExplorer from './components/Explorer/FileExplorer'
 import MindMap from './components/MindMap/MindMap'
@@ -177,8 +178,11 @@ export default function App(): JSX.Element {
 
   if (!ready) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-base-900">
-        <span className="font-mono text-xs text-base-400">iniciando…</span>
+      <div className="flex h-full w-full flex-col">
+        <TitleBar />
+        <div className="flex flex-1 items-center justify-center bg-base-900">
+          <span className="font-mono text-xs text-base-400">iniciando…</span>
+        </div>
       </div>
     )
   }
@@ -191,15 +195,20 @@ export default function App(): JSX.Element {
 
   if (!rootPath) {
     return (
-      <>
-        <WelcomeScreen onOpen={openProject} />
+      <div className="flex h-full w-full flex-col">
+        <TitleBar />
+        <div className="min-h-0 flex-1">
+          <WelcomeScreen onOpen={openProject} />
+        </div>
         {patchNotesModal}
-      </>
+      </div>
     )
   }
 
   return (
-    <div className={`flex h-full w-full ${hasBackground ? 'has-background' : 'bg-base-900'}`}>
+    <div className="flex h-full w-full flex-col">
+      <TitleBar />
+      <div className={`flex min-h-0 flex-1 ${hasBackground ? 'has-background' : 'bg-base-900'}`}>
       <BackgroundLayer />
       {!sidebarCollapsed && (
         <>
@@ -349,6 +358,7 @@ export default function App(): JSX.Element {
         />
       )}
       {patchNotesModal}
+      </div>
     </div>
   )
 }

@@ -202,13 +202,27 @@ export function registerSettingsHandlers(): void {
       // The installer can't replace this process's own .exe while it's still running (Windows
       // file lock), so a detached helper waits for us to fully quit, installs silently, then
       // relaunches the (now updated) app. Runs independently of our process via detached+unref.
-      // 6s, not 2 — this app has 4 processes (main/renderer/gpu/utility) plus before-quit cleanup
-      // (killAllPtys, stopHooksServer, stopMcpServer); 2s wasn't reliably enough for Windows to
-      // release the exe's file handle, and NSIS silently shows a "file in use" prompt when it isn't
-      // — which /S does NOT suppress, so the "silent" install just hangs waiting for a click no one
-      // sees since the old app already quit.
-      const script = `timeout /t 6 /nobreak >nul && "${installerPath}" /S && "${exePath}"`
-      spawn('cmd.exe', ['/c', script], { detached: true, stdio: 'ignore', windowsHide: true }).unref()
+      //
+      // PowerShell, not a `timeout`/`cmd.exe` chain: Windows' timeout.exe unconditionally checks
+      // stdin for a real console handle and aborts immediately ("input redirection not supported")
+      // whenever it isn't one — which is exactly what stdio: 'ignore' below gives it. /nobreak does
+      // NOT fix this; it only skips the "press a key" prompt, not that startup check. A fixed delay
+      // (however long) is also just a guess — how long Windows takes to release the exe's file
+      // handle, and how long the (unsigned) installer takes to clear a Defender/SmartScreen
+      // reputation check, both vary. Polling for this exact process's PID to actually exit, then
+      // running the installer with -Wait (which blocks for however long it genuinely takes, not a
+      // guess), replaces both guesses with the real thing.
+      const targetPid = process.pid
+      const psScript = [
+        `while (Get-Process -Id ${targetPid} -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 300 }`,
+        `Start-Process -FilePath '${installerPath.replace(/'/g, "''")}' -ArgumentList '/S' -Wait`,
+        `Start-Process -FilePath '${exePath.replace(/'/g, "''")}'`
+      ].join('; ')
+      spawn('powershell.exe', ['-NoProfile', '-WindowStyle', 'Hidden', '-Command', psScript], {
+        detached: true,
+        stdio: 'ignore',
+        windowsHide: true
+      }).unref()
 
       setTimeout(() => app.quit(), 300)
       return { ok: true }

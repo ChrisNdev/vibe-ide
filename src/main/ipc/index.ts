@@ -11,6 +11,7 @@ import { registerCheckpointsHandlers } from './checkpoints'
 import { registerMcpHandlers } from './mcp'
 import { registerVerificationHandlers } from './verification'
 import { registerWorktreeHandlers } from './worktree'
+import { registerWindowHandlers } from './window'
 
 export function registerIpcHandlers(): void {
   registerFsHandlers()
@@ -26,4 +27,5 @@ export function registerIpcHandlers(): void {
   registerMcpHandlers()
   registerVerificationHandlers()
   registerWorktreeHandlers()
+  registerWindowHandlers()
 }

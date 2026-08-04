@@ -2,6 +2,13 @@
 
 Todas as mudanças notáveis do vibeIDE ficam registradas aqui. Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [1.4.3] — 2026-08-04
+
+### Corrigido
+
+- **Barra de título nativa do Windows cobria os botões da barra de ferramentas** — o app reservava 36px no canto superior direito pros botões nativos de minimizar/maximizar/fechar, exatamente onde ficavam os botões de Busca/Mais opções/Atualizar. Substituída por uma barra de título própria, no mesmo estilo do resto do app, sempre visível (inclusive na tela inicial, que antes não tinha nenhum jeito de fechar o app sem a barra nativa).
+- **Atualização automática podia travar silenciosamente (causa raiz de verdade dessa vez)** — o `timeout.exe` do Windows se recusa a rodar sempre que a entrada padrão não é um console real, que é exatamente o caso do processo desanexado que a atualização automática usa. Como o script usava `&&`, essa falha travava a cadeia inteira antes do instalador sequer rodar. Trocado por uma espera real: o processo antigo é monitorado até terminar de verdade (em vez de um tempo fixo chutado), e o instalador roda com espera até completar (em vez de assumir quanto tempo ele leva).
+
 ## [1.4.2] — 2026-08-04
 
 ### Adicionado
