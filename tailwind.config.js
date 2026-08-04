@@ -5,35 +5,38 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Neutral grays modeled on macOS dark-mode system colors (true gray, no tint).
         base: {
-          950: '#0a0a0c',
-          900: '#0d0d0f',
-          850: '#121215',
-          800: '#18181c',
-          750: '#1e1e23',
-          700: '#26262c',
-          600: '#35353d',
-          500: '#4a4a54',
-          400: '#6b6b76',
-          300: '#9a9aa4',
-          200: '#c4c4cc',
-          100: '#e8e8ec'
+          950: '#1c1c1e',
+          900: '#202022',
+          850: '#242426',
+          800: '#2c2c2e',
+          750: '#323234',
+          700: '#3a3a3c',
+          600: '#48484a',
+          500: '#636366',
+          400: '#8e8e93',
+          300: '#aeaeb2',
+          200: '#c7c7cc',
+          100: '#f5f5f7'
         },
         accent: {
-          DEFAULT: '#39d98a',
-          dim: '#2ba86b',
-          bright: '#5cf0a5',
-          muted: 'rgba(57, 217, 138, 0.12)'
+          DEFAULT: '#0a84ff',
+          dim: '#0968cc',
+          bright: '#409cff',
+          muted: 'rgba(10, 132, 255, 0.15)'
         },
-        danger: '#e5484d',
-        warn: '#f5a623',
+        danger: '#ff453a',
+        warn: '#ff9f0a',
 
-        // Sistema de design CMYK (docs/PLANO.md → SISTEMA DE DESIGN), lido de src/renderer/src/styles/tokens.css
+        // Surface/text aliases — read from src/renderer/src/styles/tokens.css.
         substrate: 'var(--substrate)',
         panel: 'var(--panel)',
         rule: 'var(--rule)',
         paper: 'var(--paper)',
         muted: 'var(--muted)',
+        // Semantic accents (agent touched / dirty / warning / both) — same names kept everywhere
+        // they're already wired, values now map to Apple's system color palette.
         ink: {
           cyan: 'var(--ink-cyan)',
           magenta: 'var(--ink-magenta)',
@@ -49,23 +52,25 @@ export default {
       transitionDuration: {
         150: '150ms'
       },
-      // Regra dura do sistema de design: zero box-shadow, profundidade é degrau de valor + fio de 1px.
-      boxShadow: {
-        panel: 'none',
-        popover: 'none'
+      transitionTimingFunction: {
+        // "ease-out-expo"-ish — the fluid, fast-then-settle deceleration used across macOS/iOS UI.
+        apple: 'cubic-bezier(0.16, 1, 0.3, 1)'
       },
       borderRadius: {
-        sm: '2px',
-        DEFAULT: '3px',
-        md: '3px'
+        sm: '8px',
+        DEFAULT: '10px',
+        md: '12px',
+        lg: '14px',
+        xl: '18px',
+        '2xl': '22px'
       },
       keyframes: {
         'fade-in': { from: { opacity: 0 }, to: { opacity: 1 } },
-        'slide-up': { from: { opacity: 0, transform: 'translateY(4px)' }, to: { opacity: 1, transform: 'translateY(0)' } }
+        'slide-up': { from: { opacity: 0, transform: 'translateY(8px) scale(0.98)' }, to: { opacity: 1, transform: 'translateY(0) scale(1)' } }
       },
       animation: {
-        'fade-in': 'fade-in 150ms ease-out',
-        'slide-up': 'slide-up 150ms ease-out'
+        'fade-in': 'fade-in 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'slide-up': 'slide-up 260ms cubic-bezier(0.16, 1, 0.3, 1)'
       }
     }
   },

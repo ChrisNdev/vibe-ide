@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { X, ImagePlus, RotateCcw, Download, Upload, Trash2 } from 'lucide-react'
+import { Palette, ImagePlus, RotateCcw, Download, Upload, Trash2 } from 'lucide-react'
 import { useBackgroundStore } from '@renderer/store/backgroundStore'
+import SidePanel from '@renderer/components/ui/SidePanel'
 import { PRESETS } from './presets'
 import type { BackgroundKind } from '@shared/types'
 
@@ -76,14 +77,8 @@ export default function BackgroundSettings({ onClose }: BackgroundSettingsProps)
   }
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 flex w-[320px] flex-col gap-4 overflow-y-auto border-l border-rule bg-panel p-3 text-base-200 animate-slide-up">
-      <div className="flex items-center justify-between">
-        <span className="font-medium text-base-100">Aparência</span>
-        <button className="rounded p-1 text-base-400 hover:bg-base-700/60" onClick={onClose} title="Fechar">
-          <X size={14} />
-        </button>
-      </div>
-
+    <SidePanel title="Aparência" icon={Palette} onClose={onClose} width={340}>
+      <div className="flex flex-col gap-4 overflow-y-auto p-4">
       {contrastNotice && (
         <div className="rounded border border-ink-yellow/50 bg-ink-yellow/10 px-2 py-1.5 text-[11px] text-ink-yellow">
           {contrastNotice}
@@ -248,6 +243,7 @@ export default function BackgroundSettings({ onClose }: BackgroundSettingsProps)
           Remover fundo
         </button>
       )}
-    </div>
+      </div>
+    </SidePanel>
   )
 }

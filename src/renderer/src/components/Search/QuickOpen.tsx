@@ -77,9 +77,9 @@ export default function QuickOpen({ onClose, onOpenResult }: QuickOpenProps): JS
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-substrate/60 pt-24" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-substrate/50 pt-24 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="flex max-h-[60vh] w-[560px] flex-col overflow-hidden rounded-md border border-rule bg-panel shadow-none"
+        className="surface flex max-h-[60vh] w-[560px] flex-col overflow-hidden rounded-2xl border border-base-700/60 shadow-2xl animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         <input
@@ -88,7 +88,7 @@ export default function QuickOpen({ onClose, onOpenResult }: QuickOpenProps): JS
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ir para arquivo…"
-          className="border-b border-base-700/60 bg-base-900 px-3 py-2 text-[13px] text-base-100 outline-none focus:border-ink-yellow"
+          className="border-b border-base-700/60 bg-transparent px-3.5 py-3 text-[13px] text-base-100 outline-none placeholder:text-base-500"
         />
         <div className="min-h-0 flex-1 overflow-y-auto">
           {loading && <div className="p-3 text-[12px] text-base-500">Lendo arquivos do projeto…</div>}

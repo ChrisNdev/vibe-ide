@@ -36,6 +36,19 @@ function compareVersions(a: string, b: string): number {
   return 0
 }
 
+/** Shared by the once-per-update prompt and the on-demand "changelog" view in the welcome screen. */
+async function fetchReleaseNotes(version: string): Promise<PendingPatchNotes> {
+  try {
+    const gh = await resolveGhPath()
+    const { stdout } = await execFileAsync(gh, ['release', 'view', `v${version}`, '--repo', UPDATE_REPO, '--json', 'body,url'])
+    const data = JSON.parse(stdout) as { body: string; url: string }
+    return { version, notes: data.body || null, releaseUrl: data.url }
+  } catch {
+    // gh unavailable/not logged in/no matching release — still worth a one-time "you're now on vX" nudge
+    return { version, notes: null, releaseUrl: null }
+  }
+}
+
 export function registerSettingsHandlers(): void {
   ipcMain.handle(IPC.SETTINGS_GET, async (): Promise<AppSettings> => {
     return getSettings()
@@ -154,16 +167,11 @@ export function registerSettingsHandlers(): void {
     store.set('lastSeenVersion', currentVersion)
     // null lastSeen = fresh install, nothing to compare against — don't greet a first-time user with "patch notes"
     if (lastSeen === null || lastSeen === currentVersion) return null
+    return fetchReleaseNotes(currentVersion)
+  })
 
-    try {
-      const gh = await resolveGhPath()
-      const { stdout } = await execFileAsync(gh, ['release', 'view', `v${currentVersion}`, '--repo', UPDATE_REPO, '--json', 'body,url'])
-      const data = JSON.parse(stdout) as { body: string; url: string }
-      return { version: currentVersion, notes: data.body || null, releaseUrl: data.url }
-    } catch {
-      // gh unavailable/not logged in/no matching release — still worth a one-time "you're now on vX" nudge
-      return { version: currentVersion, notes: null, releaseUrl: null }
-    }
+  ipcMain.handle(IPC.APP_GET_CURRENT_VERSION_NOTES, async (): Promise<PendingPatchNotes> => {
+    return fetchReleaseNotes(app.getVersion())
   })
 
   ipcMain.handle(IPC.APP_INSTALL_UPDATE, async (_e, releaseTag: string): Promise<UpdateInstallResult> => {

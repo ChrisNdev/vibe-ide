@@ -42,18 +42,18 @@
 }
 
 :root {
-  /* Tintas de processo — canal semântico de estado, nunca decorativo */
-  --ink-cyan: #2e93b8; /* tocado pelo agente nesta sessão */
-  --ink-magenta: #c4457f; /* modificado / não commitado */
-  --ink-yellow: #d9a521; /* diagnóstico, aviso, aguardando permissão */
-  --ink-overprint: #7a5e9e; /* ciano + magenta sobrepostos */
+  /* Cores semânticas de estado — mesmos nomes de sempre, agora nas cores de sistema da Apple. */
+  --ink-cyan: #0a84ff; /* tocado pelo agente nesta sessão (systemBlue) */
+  --ink-magenta: #ff9f0a; /* modificado / não commitado (systemOrange) */
+  --ink-yellow: #ffd60a; /* diagnóstico, aviso, aguardando permissão (systemYellow) */
+  --ink-overprint: #bf5af2; /* tocado + modificado ao mesmo tempo (systemPurple) */
 
-  /* Substrato e superfícies — preto de tinta é quente, papel nunca é branco puro */
-  --substrate: #141210;
-  --panel: #1c1a18;
-  --rule: #2a2724;
-  --paper: #ede6da;
-  --muted: #8a8378;
+  /* Substrato e superfícies — cinza neutro estilo macOS dark mode, sem tonalidade quente/fria. */
+  --substrate: #1c1c1e;
+  --panel: #242426;
+  --rule: #3a3a3c;
+  --paper: #f5f5f7;
+  --muted: #8e8e93;
 
   /* Cores do realce de sintaxe do preview — paleta "One Dark-ish" própria,
      independente do sistema CMYK (não carrega significado de estado). */
@@ -66,5 +66,5 @@
   --syntax-operator: #9a9aa4;
 
   /* --substrate at 40% alpha — SVG stroke can't reference a hex token and add opacity in one go. */
-  --mindmap-node-stroke: rgba(20, 18, 16, 0.4);
+  --mindmap-node-stroke: rgba(28, 28, 30, 0.4);
 }

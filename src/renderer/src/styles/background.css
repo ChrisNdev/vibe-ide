@@ -1,22 +1,27 @@
 /**
- * Fundo personalizável (docs/PLANO.md → FASE 2). Layer model:
+ * Fundo personalizável (docs/PLANO.md → FASE 2), estilo "vidro" ligado por padrão. Layer model:
  *
- *   L0  mídia        .bg-l0   — fixed, full-bleed, GPU-composited (transform only)
- *   L1  véu          .bg-l1   — --substrate at --veil opacity, guarantees contrast
- *   L2  superfícies  .surface — opt-in per panel container, ONE backdrop-filter each,
- *                                never per row/node (hard perf rule)
- *   L3  conteúdo     (default) — text/ink stay 100% opaque, untouched by any of this
+ *   L0  mídia        .bg-l0        — fixed, full-bleed, GPU-composited (transform only)
+ *   L1  véu          .bg-l1        — --substrate at --veil opacity, guarantees contrast
+ *   L2  superfícies  .surface      — real backdrop-filter blur. Reserve for TRANSIENT overlays
+ *                     .surface-tint — no blur, just a tinted alpha background + the same edge
+ *                                     highlight. For chrome that's on screen constantly.
+ *   L3  conteúdo     (default)    — text/ink stay 100% opaque, untouched by any of this
  *
- * Everything here is inert until the root carries .has-background — with no
- * background active, panels render exactly as Fase 1 left them.
+ * The split exists because this app runs with hardware acceleration off by default (see
+ * app.disableHardwareAcceleration() in src/main/index.ts, needed for VM/RDP compatibility) —
+ * backdrop-filter falls back to slow CPU rasterization there. A handful of occasional overlay
+ * panels blurring is fine; the sidebar/terminal/toolbar/etc all blurring *continuously* while
+ * the terminal repaints next to them is not. .surface-tint gets the same glass-ish tinted look
+ * for zero compositing cost — no blur convolution, just a translucent color.
  */
 
 :root {
   --bg-blur: 24px;
   --bg-scale: 1.04; /* avoids the blurred layer's edge showing at the viewport border */
-  --veil: 0.72;
-  --surface-alpha: 0.78;
-  --spot: #c4457f;
+  --veil: 0.58;
+  --surface-alpha: 0.45;
+  --spot: #0a84ff;
 }
 
 /* Negative z-index — reliably behind unpositioned in-flow content regardless of
@@ -42,8 +47,17 @@
   pointer-events: none;
 }
 
-/* L2 — opt-in per panel container. One backdrop-filter each; rows/nodes inside stay fully transparent. */
-.has-background .surface {
+/* L2 — real blur, for overlay panels only (SidePanel, QuickOpen, PatchNotesModal, WelcomeScreen).
+   One backdrop-filter per panel container; rows/nodes inside stay fully transparent. */
+.surface {
   background: color-mix(in srgb, var(--panel) calc(var(--surface-alpha) * 100%), transparent);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+/* L2, cheap variant — same tint and edge highlight, no backdrop-filter at all. For chrome
+   that's always on screen (sidebar, terminal frame, toolbar, mind map/preview/activity/commit bar). */
+.surface-tint {
+  background: color-mix(in srgb, var(--panel) calc(var(--surface-alpha) * 100%), transparent);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 }

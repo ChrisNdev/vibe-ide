@@ -133,7 +133,7 @@ export default function PreviewPane({ active }: PreviewPaneProps): JSX.Element {
         )}
       </div>
 
-      <div className="surface min-h-0 flex-1 overflow-hidden bg-base-900">
+      <div className="surface-tint min-h-0 flex-1 overflow-hidden">
         {!previewPath && (
           <div className="flex h-full items-center justify-center text-xs text-base-400">
             Clique em um arquivo no explorador para ver o conteúdo aqui — sem gastar tokens de IA.

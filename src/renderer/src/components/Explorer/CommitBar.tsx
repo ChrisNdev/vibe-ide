@@ -54,7 +54,7 @@ export default function CommitBar(): JSX.Element | null {
   }
 
   return (
-    <div className="surface shrink-0 border-t border-base-700/60 bg-base-850 p-2">
+    <div className="surface-tint shrink-0 border-t border-base-700/60 p-2">
       <div className="mb-1.5 flex items-center gap-2 text-[11px] text-base-400">
         <span className="truncate font-medium text-base-300">{gitBranch ?? '—'}</span>
         {gitAhead > 0 && (

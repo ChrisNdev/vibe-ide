@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { X, GitBranch, GitMerge, Trash2, Plus } from 'lucide-react'
+import { GitBranch, GitMerge, Trash2, Plus } from 'lucide-react'
 import { useExplorerStore } from '@renderer/store/explorerStore'
 import { useTerminalStore, nextTerminalId } from '@renderer/store/terminalStore'
 import { parseDiff } from '@renderer/components/Preview/diff'
+import SidePanel from '@renderer/components/ui/SidePanel'
 import type { WorktreeInfo, AgentStatus } from '@shared/types'
 
 interface WorktreePanelProps {
@@ -94,17 +95,7 @@ export default function WorktreePanel({ onClose, onOpenTerminal }: WorktreePanel
   const diffLines = diffText ? parseDiff(diffText) : []
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 flex w-[480px] flex-col border-l border-rule bg-panel text-base-200 animate-slide-up">
-      <div className="flex items-center justify-between border-b border-base-700/60 px-3 py-2">
-        <span className="flex items-center gap-1.5 font-medium text-base-100">
-          <GitBranch size={13} />
-          Tarefas paralelas
-        </span>
-        <button className="rounded p-1 text-base-400 hover:bg-base-700/60" onClick={onClose} title="Fechar">
-          <X size={14} />
-        </button>
-      </div>
-
+    <SidePanel title="Tarefas paralelas" icon={GitBranch} onClose={onClose} width={480}>
       {!rootPath && <div className="p-3 text-[12px] text-base-500">Abra uma pasta primeiro.</div>}
 
       {rootPath && (
@@ -186,6 +177,6 @@ export default function WorktreePanel({ onClose, onOpenTerminal }: WorktreePanel
         </>
       )}
       {status && <div className="border-t border-rule px-3 py-1.5 text-[11px] text-base-400">{status}</div>}
-    </div>
+    </SidePanel>
   )
 }

@@ -6,8 +6,8 @@
  */
 import { hexToRgb01, blendSrgb, relativeLuminance, contrastRatio } from './colorMath'
 
-const PAPER_HEX = '#ede6da'
-const SUBSTRATE_HEX = '#141210'
+const PAPER_HEX = '#f5f5f7'
+const SUBSTRATE_HEX = '#1c1c1e'
 const MIN_CONTRAST = 4.5
 
 export interface ContrastResult {

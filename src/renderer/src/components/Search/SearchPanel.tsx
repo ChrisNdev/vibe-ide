@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { X, CaseSensitive, Regex, GitBranch } from 'lucide-react'
+import { Search, CaseSensitive, Regex, GitBranch } from 'lucide-react'
 import type { SearchMatch, SearchOptions } from '@shared/types'
 import { useExplorerStore } from '@renderer/store/explorerStore'
 import { basename, dirname } from '@renderer/components/Explorer/pathUtils'
+import SidePanel from '@renderer/components/ui/SidePanel'
 
 interface SearchPanelProps {
   onClose: () => void
@@ -83,21 +84,13 @@ export default function SearchPanel({ onClose, onOpenResult }: SearchPanelProps)
   const groups = useMemo(() => groupByFile(matches), [matches])
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 flex w-[400px] flex-col border-l border-rule bg-panel text-base-200 animate-slide-up">
-      <div className="flex items-center justify-between border-b border-base-700/60 px-3 py-2">
-        <span className="font-medium text-base-100">Buscar no projeto</span>
-        <button className="rounded p-1 text-base-400 hover:bg-base-700/60" onClick={onClose} title="Fechar (Esc)">
-          <X size={14} />
-        </button>
-      </div>
-
+    <SidePanel title="Buscar no projeto" icon={Search} onClose={onClose} width={400}>
       <div className="flex flex-col gap-1.5 border-b border-base-700/60 p-2">
         <div className="flex items-center gap-1">
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Escape' && onClose()}
             placeholder="Buscar…"
             className="flex-1 rounded border border-base-700/60 bg-base-900 px-2 py-1 text-[12px] text-base-100 outline-none focus:border-ink-yellow"
           />
@@ -165,6 +158,6 @@ export default function SearchPanel({ onClose, onOpenResult }: SearchPanelProps)
           </div>
         ))}
       </div>
-    </div>
+    </SidePanel>
   )
 }

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search, Bell, Activity, Camera, Plug, FlaskConical, GitBranch } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, TerminalSquare, Waypoints, Eye, Palette, Search, Bell, Activity, Camera, Plug, FlaskConical, GitBranch, MoreHorizontal } from 'lucide-react'
+import MoreMenu from './components/ui/MoreMenu'
+import OnboardingModal from './components/Onboarding/OnboardingModal'
 import TerminalPane from './components/Terminal/Terminal'
 import FileExplorer from './components/Explorer/FileExplorer'
 import MindMap from './components/MindMap/MindMap'
@@ -26,6 +28,7 @@ import { useActivityStore, ensureTranscriptSubscription } from './store/activity
 import type { PendingPatchNotes } from '@shared/types'
 
 type MainView = 'terminal' | 'mindmap' | 'preview' | 'activity' | 'verification'
+type OverlayKind = 'background' | 'search' | 'quickOpen' | 'hooks' | 'checkpoints' | 'mcp' | 'worktree' | null
 
 const MIN_SIDEBAR_WIDTH = 180
 const MAX_SIDEBAR_WIDTH = 560
@@ -41,14 +44,15 @@ export default function App(): JSX.Element {
   const [sidebarWidth, setSidebarWidth] = useState(280)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [view, setView] = useState<MainView>('terminal')
-  const [bgSettingsOpen, setBgSettingsOpen] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [quickOpenOpen, setQuickOpenOpen] = useState(false)
-  const [hooksSettingsOpen, setHooksSettingsOpen] = useState(false)
-  const [checkpointsOpen, setCheckpointsOpen] = useState(false)
-  const [mcpOpen, setMcpOpen] = useState(false)
-  const [worktreeOpen, setWorktreeOpen] = useState(false)
+  // One slot for every right-side panel/overlay instead of 7 independent booleans — the previous
+  // shape let them stack invisibly on top of each other (same position, same z-index, decided by
+  // DOM order rather than click order), so opening a second one while another was open silently
+  // did nothing visible. A single active slot makes that impossible by construction.
+  const [activeOverlay, setActiveOverlay] = useState<OverlayKind>(null)
   const [patchNotes, setPatchNotes] = useState<PendingPatchNotes | null>(null)
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const moreButtonRef = useRef<HTMLButtonElement>(null)
   const resizing = useRef(false)
   const hasBackground = useBackgroundStore((s) => s.config.kind !== 'none')
   const loadBackground = useBackgroundStore((s) => s.load)
@@ -77,6 +81,12 @@ export default function App(): JSX.Element {
     void useActivityStore.getState().start(rootPath)
   }, [rootPath])
 
+  useEffect(() => {
+    if (!rootPath) return
+    if (localStorage.getItem('vibeide.onboardingSeen')) return
+    setShowOnboarding(true)
+  }, [rootPath])
+
   const openProject = useCallback(
     async (path: string): Promise<void> => {
       await setRoot(path)
@@ -93,6 +103,11 @@ export default function App(): JSX.Element {
     },
     [setRoot, addTab]
   )
+
+  const iconBtnClass = (active: boolean): string =>
+    `rounded-lg p-1.5 transition-colors duration-150 ease-apple ${
+      active ? 'bg-accent-muted text-accent' : 'text-base-400 hover:bg-base-700/60 hover:text-base-200'
+    }`
 
   const toggleSidebar = (): void => {
     const next = !sidebarCollapsed
@@ -120,29 +135,33 @@ export default function App(): JSX.Element {
     window.addEventListener('mouseup', handleUp)
   }, [])
 
+  const toggleOverlay = useCallback((kind: OverlayKind) => {
+    setActiveOverlay((cur) => (cur === kind ? null : kind))
+  }, [])
+
   useEffect(() => {
     if (!rootPath) return
     const handleKey = (e: KeyboardEvent): void => {
       const mod = e.ctrlKey || e.metaKey
       if (mod && e.shiftKey && e.key.toLowerCase() === 'f') {
         e.preventDefault()
-        setQuickOpenOpen(false)
-        setSearchOpen((v) => !v)
+        toggleOverlay('search')
       } else if (mod && e.key.toLowerCase() === 'p') {
         e.preventDefault()
-        setSearchOpen(false)
-        setQuickOpenOpen((v) => !v)
+        toggleOverlay('quickOpen')
+      } else if (e.key === 'Escape') {
+        setActiveOverlay(null)
       }
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [rootPath])
+  }, [rootPath, toggleOverlay])
 
   const openSearchResult = useCallback(
     (file: string, line: number) => {
       setPreview(file, line)
       setView('preview')
-      setSearchOpen(false)
+      setActiveOverlay(null)
     },
     [setPreview]
   )
@@ -151,7 +170,7 @@ export default function App(): JSX.Element {
     (file: string) => {
       setPreview(file)
       setView('preview')
-      setQuickOpenOpen(false)
+      setActiveOverlay(null)
     },
     [setPreview]
   )
@@ -164,8 +183,19 @@ export default function App(): JSX.Element {
     )
   }
 
+  // Rendered unconditionally below (not per-branch) so a pending patch-notes prompt shows up
+  // whether or not a project is already open — it used to be nested only inside the "project
+  // open" branch, so it silently never appeared for anyone who updated and hadn't reopened a
+  // project yet.
+  const patchNotesModal = patchNotes && <PatchNotesModal patchNotes={patchNotes} onClose={() => setPatchNotes(null)} />
+
   if (!rootPath) {
-    return <WelcomeScreen onOpen={openProject} />
+    return (
+      <>
+        <WelcomeScreen onOpen={openProject} />
+        {patchNotesModal}
+      </>
+    )
   }
 
   return (
@@ -173,7 +203,7 @@ export default function App(): JSX.Element {
       <BackgroundLayer />
       {!sidebarCollapsed && (
         <>
-          <div style={{ width: sidebarWidth }} className="surface flex h-full shrink-0 flex-col">
+          <div style={{ width: sidebarWidth }} className="surface-tint flex h-full shrink-0 flex-col border-r border-base-700/60">
             <FileExplorer />
           </div>
           <div
@@ -183,96 +213,54 @@ export default function App(): JSX.Element {
         </>
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex items-center gap-1 px-2 py-1.5">
+        <div className="surface-tint flex items-center gap-0.5 border-b border-base-700/60 px-2 py-2">
           <button
             title={sidebarCollapsed ? 'Mostrar explorador' : 'Ocultar explorador'}
-            className="rounded p-1 text-base-400 hover:bg-base-700/60 hover:text-base-200"
+            className={iconBtnClass(false)}
             onClick={toggleSidebar}
           >
             {sidebarCollapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
           </button>
-          <div className="mx-1 h-4 w-px bg-base-700/60" />
-          <button
-            title="Terminal"
-            className={`rounded p-1 hover:bg-base-700/60 ${view === 'terminal' ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
-            onClick={() => setView('terminal')}
-          >
+          <div className="mx-1.5 h-4 w-px bg-base-700/60" />
+          <button title="Terminal" className={iconBtnClass(view === 'terminal')} onClick={() => setView('terminal')}>
             <TerminalSquare size={14} />
           </button>
-          <button
-            title="Mapa mental do projeto"
-            className={`rounded p-1 hover:bg-base-700/60 ${view === 'mindmap' ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
-            onClick={() => setView('mindmap')}
-          >
+          <button title="Mapa mental do projeto" className={iconBtnClass(view === 'mindmap')} onClick={() => setView('mindmap')}>
             <Waypoints size={14} />
           </button>
           <button
             title="Visualizador de arquivo (local, sem gastar tokens de IA)"
-            className={`rounded p-1 hover:bg-base-700/60 ${view === 'preview' ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
+            className={iconBtnClass(view === 'preview')}
             onClick={() => setView('preview')}
           >
             <Eye size={14} />
           </button>
           <button
             title="Atividade — o que o agente está fazendo, tokens e custo"
-            className={`rounded p-1 hover:bg-base-700/60 ${view === 'activity' ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
+            className={iconBtnClass(view === 'activity')}
             onClick={() => setView('activity')}
           >
             <Activity size={14} />
           </button>
           <button
             title="Verificação — rodar scripts, ver o preview, diagnósticos"
-            className={`rounded p-1 hover:bg-base-700/60 ${view === 'verification' ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
+            className={iconBtnClass(view === 'verification')}
             onClick={() => setView('verification')}
           >
             <FlaskConical size={14} />
           </button>
           <div className="flex-1" />
           <ControlStrip />
-          <button
-            title="Buscar no projeto (Ctrl+Shift+F)"
-            className={`rounded p-1 hover:bg-base-700/60 ${searchOpen ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
-            onClick={() => {
-              setQuickOpenOpen(false)
-              setSearchOpen((v) => !v)
-            }}
-          >
+          <button title="Buscar no projeto (Ctrl+Shift+F)" className={iconBtnClass(activeOverlay === 'search')} onClick={() => toggleOverlay('search')}>
             <Search size={14} />
           </button>
           <button
-            title="Aparência — fundo personalizável"
-            className={`rounded p-1 hover:bg-base-700/60 ${bgSettingsOpen ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
-            onClick={() => setBgSettingsOpen((v) => !v)}
+            ref={moreButtonRef}
+            title="Mais opções"
+            className={iconBtnClass(moreMenuOpen || ['background', 'hooks', 'checkpoints', 'mcp', 'worktree'].includes(activeOverlay ?? ''))}
+            onClick={() => setMoreMenuOpen((v) => !v)}
           >
-            <Palette size={14} />
-          </button>
-          <button
-            title="Hooks e notificações"
-            className={`rounded p-1 hover:bg-base-700/60 ${hooksSettingsOpen ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
-            onClick={() => setHooksSettingsOpen((v) => !v)}
-          >
-            <Bell size={14} />
-          </button>
-          <button
-            title="Checkpoints"
-            className={`rounded p-1 hover:bg-base-700/60 ${checkpointsOpen ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
-            onClick={() => setCheckpointsOpen((v) => !v)}
-          >
-            <Camera size={14} />
-          </button>
-          <button
-            title="Servidor MCP"
-            className={`rounded p-1 hover:bg-base-700/60 ${mcpOpen ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
-            onClick={() => setMcpOpen((v) => !v)}
-          >
-            <Plug size={14} />
-          </button>
-          <button
-            title="Tarefas paralelas — worktrees"
-            className={`rounded p-1 hover:bg-base-700/60 ${worktreeOpen ? 'text-accent' : 'text-base-400 hover:text-base-200'}`}
-            onClick={() => setWorktreeOpen((v) => !v)}
-          >
-            <GitBranch size={14} />
+            <MoreHorizontal size={14} />
           </button>
           <UpdateChecker />
         </div>
@@ -294,22 +282,73 @@ export default function App(): JSX.Element {
           <VerificationPanel active={view === 'verification'} />
         </div>
       </div>
-      {bgSettingsOpen && <BackgroundSettings onClose={() => setBgSettingsOpen(false)} />}
-      {searchOpen && <SearchPanel onClose={() => setSearchOpen(false)} onOpenResult={openSearchResult} />}
-      {quickOpenOpen && <QuickOpen onClose={() => setQuickOpenOpen(false)} onOpenResult={openQuickOpenResult} />}
-      {hooksSettingsOpen && <HooksSettings onClose={() => setHooksSettingsOpen(false)} />}
-      {checkpointsOpen && <CheckpointsPanel onClose={() => setCheckpointsOpen(false)} />}
-      {mcpOpen && <McpSettings onClose={() => setMcpOpen(false)} />}
-      {worktreeOpen && (
+      {activeOverlay === 'background' && <BackgroundSettings onClose={() => setActiveOverlay(null)} />}
+      {activeOverlay === 'search' && <SearchPanel onClose={() => setActiveOverlay(null)} onOpenResult={openSearchResult} />}
+      {activeOverlay === 'quickOpen' && <QuickOpen onClose={() => setActiveOverlay(null)} onOpenResult={openQuickOpenResult} />}
+      {activeOverlay === 'hooks' && <HooksSettings onClose={() => setActiveOverlay(null)} />}
+      {activeOverlay === 'checkpoints' && <CheckpointsPanel onClose={() => setActiveOverlay(null)} />}
+      {activeOverlay === 'mcp' && <McpSettings onClose={() => setActiveOverlay(null)} />}
+      {activeOverlay === 'worktree' && (
         <WorktreePanel
-          onClose={() => setWorktreeOpen(false)}
+          onClose={() => setActiveOverlay(null)}
           onOpenTerminal={() => {
             setView('terminal')
-            setWorktreeOpen(false)
+            setActiveOverlay(null)
           }}
         />
       )}
-      {patchNotes && <PatchNotesModal patchNotes={patchNotes} onClose={() => setPatchNotes(null)} />}
+      {moreMenuOpen && (
+        <MoreMenu
+          anchorRef={moreButtonRef}
+          onClose={() => setMoreMenuOpen(false)}
+          items={[
+            {
+              label: 'Aparência',
+              description: 'Muda a imagem ou cor de fundo do app',
+              icon: Palette,
+              active: activeOverlay === 'background',
+              onSelect: () => toggleOverlay('background')
+            },
+            {
+              label: 'Notificações',
+              description: 'Avisa no computador quando o Claude termina ou precisa de você',
+              icon: Bell,
+              active: activeOverlay === 'hooks',
+              onSelect: () => toggleOverlay('hooks')
+            },
+            {
+              label: 'Pontos de restauração',
+              description: 'Guarda um retrato dos arquivos antes de cada mudança, pra poder voltar atrás',
+              icon: Camera,
+              active: activeOverlay === 'checkpoints',
+              onSelect: () => toggleOverlay('checkpoints')
+            },
+            {
+              label: 'Ferramentas extras pro Claude',
+              description: 'Deixa o Claude enxergar o projeto sem precisar procurar arquivo por arquivo',
+              icon: Plug,
+              active: activeOverlay === 'mcp',
+              onSelect: () => toggleOverlay('mcp')
+            },
+            {
+              label: 'Tarefas em paralelo',
+              description: 'Roda mais de um Claude ao mesmo tempo, cada um numa cópia separada do projeto',
+              icon: GitBranch,
+              active: activeOverlay === 'worktree',
+              onSelect: () => toggleOverlay('worktree')
+            }
+          ]}
+        />
+      )}
+      {showOnboarding && (
+        <OnboardingModal
+          onClose={() => {
+            localStorage.setItem('vibeide.onboardingSeen', '1')
+            setShowOnboarding(false)
+          }}
+        />
+      )}
+      {patchNotesModal}
     </div>
   )
 }

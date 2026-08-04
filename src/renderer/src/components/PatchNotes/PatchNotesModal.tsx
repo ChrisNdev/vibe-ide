@@ -1,30 +1,47 @@
+import { useEffect, useRef } from 'react'
 import { PartyPopper, X } from 'lucide-react'
 import type { PendingPatchNotes } from '@shared/types'
 
 interface PatchNotesModalProps {
   patchNotes: PendingPatchNotes
   onClose: () => void
+  /** "Atualizado para vX" after a fresh update (default) vs. "Notas da versão vX" when opened on demand */
+  heading?: 'updated' | 'notes'
 }
 
-export default function PatchNotesModal({ patchNotes, onClose }: PatchNotesModalProps): JSX.Element {
+export default function PatchNotesModal({ patchNotes, onClose, heading = 'updated' }: PatchNotesModalProps): JSX.Element {
   const { version, notes, releaseUrl } = patchNotes
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') onCloseRef.current()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-substrate/60" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-substrate/50 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="surface flex max-h-[70vh] w-[520px] flex-col rounded border border-rule bg-panel text-base-200"
+        className="surface flex max-h-[70vh] w-[540px] flex-col overflow-hidden rounded-2xl border border-base-700/60 text-base-200 shadow-2xl animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-rule px-4 py-3">
-          <span className="flex items-center gap-2 font-medium text-base-100">
-            <PartyPopper size={15} className="text-ink-yellow" />
-            Atualizado para v{version}
+        <div className="flex items-center justify-between border-b border-base-700/60 px-5 py-4">
+          <span className="flex items-center gap-2 text-[14px] font-semibold text-base-100">
+            <PartyPopper size={16} className="text-ink-yellow" />
+            {heading === 'updated' ? `Atualizado para v${version}` : `Notas da versão v${version}`}
           </span>
-          <button className="rounded p-1 text-base-400 hover:bg-base-700/60" onClick={onClose} title="Fechar">
+          <button
+            className="rounded-full p-1.5 text-base-400 transition-colors duration-150 ease-apple hover:bg-base-700/60 hover:text-base-100"
+            onClick={onClose}
+            title="Fechar (Esc)"
+          >
             <X size={14} />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 text-[13px] leading-relaxed">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 text-[13px] leading-relaxed">
           {notes ? (
             <pre className="whitespace-pre-wrap font-sans text-base-300">{notes}</pre>
           ) : (
@@ -42,8 +59,11 @@ export default function PatchNotesModal({ patchNotes, onClose }: PatchNotesModal
             </p>
           )}
         </div>
-        <div className="flex justify-end border-t border-rule px-4 py-2.5">
-          <button onClick={onClose} className="rounded bg-accent px-3 py-1.5 text-[12px] font-medium text-base-950 hover:bg-accent-bright">
+        <div className="flex justify-end border-t border-base-700/60 px-5 py-3">
+          <button
+            onClick={onClose}
+            className="rounded-full bg-accent px-4 py-1.5 text-[12px] font-medium text-white transition-colors duration-150 ease-apple hover:bg-accent-bright"
+          >
             Entendi
           </button>
         </div>

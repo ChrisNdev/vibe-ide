@@ -3,22 +3,23 @@ import type { BackgroundConfig, ThemeExportResult, ThemeImportResult } from '@sh
 import { PRESETS } from '@renderer/components/Background/presets'
 import { hexToRgb01, blendSrgb, rgbToHex } from '@renderer/components/Background/colorMath'
 
-const SUBSTRATE_RGB = hexToRgb01('#141210')
-const PANEL_RGB = hexToRgb01('#1c1a18')
+const SUBSTRATE_RGB = hexToRgb01('#1c1c1e')
+const PANEL_RGB = hexToRgb01('#242426')
 
+/** On by default — "glass" panels have nothing to catch the light off of without an ambient backdrop behind them. */
 export const DEFAULT_BACKGROUND: BackgroundConfig = {
-  kind: 'none',
+  kind: 'gradient',
   imageId: null,
-  gradientFrom: '#141210',
-  gradientTo: '#2a2724',
-  solidColor: '#141210',
+  gradientFrom: '#1a1d24',
+  gradientTo: '#0e0f12',
+  solidColor: '#1c1c1e',
   proceduralId: null,
-  blur: 24,
+  blur: 40,
   brightness: 1,
   saturation: 1,
-  veil: 0.72,
-  surfaceAlpha: 0.78,
-  spot: '#c4457f',
+  veil: 0.58,
+  surfaceAlpha: 0.45,
+  spot: '#0a84ff',
   contrastGuaranteed: true,
   terminalTranslucent: false,
   useSystemWallpaper: false
@@ -180,7 +181,7 @@ export const useBackgroundStore = create<BackgroundState>((set, get) => ({
 
   terminalBackgroundHex: () => {
     const { config, avgColor } = get()
-    if (config.kind === 'none') return '#141210'
+    if (config.kind === 'none') return '#1c1c1e'
     const backdrop = avgColor ?? SUBSTRATE_RGB
     const veiled = blendSrgb(SUBSTRATE_RGB, backdrop, config.veil)
     const surface = blendSrgb(PANEL_RGB, veiled, config.surfaceAlpha)

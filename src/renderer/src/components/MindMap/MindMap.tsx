@@ -282,7 +282,7 @@ export default function MindMap({ rootPath, active }: MindMapProps): JSX.Element
           {copyStatus && <span className="text-accent">{copyStatus}</span>}
         </div>
       )}
-      <div ref={containerRef} className="surface relative min-h-0 flex-1 overflow-hidden bg-base-900">
+      <div ref={containerRef} className="surface-tint relative min-h-0 flex-1 overflow-hidden">
         {!rootPath && (
           <div className="flex h-full items-center justify-center text-xs text-base-400">
             Abra uma pasta para ver o mapa mental.

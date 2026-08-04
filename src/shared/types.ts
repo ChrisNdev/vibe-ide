@@ -417,6 +417,7 @@ export const IPC = {
   APP_INSTALL_UPDATE: 'app:installUpdate',
   APP_OPEN_EXTERNAL: 'app:openExternal',
   APP_GET_PENDING_PATCH_NOTES: 'app:getPendingPatchNotes',
+  APP_GET_CURRENT_VERSION_NOTES: 'app:getCurrentVersionNotes',
   GRAPH_BUILD: 'graph:build',
   BACKGROUND_PICK_IMAGE: 'background:pickImage',
   BACKGROUND_REMOVE: 'background:remove',

@@ -11,11 +11,13 @@ import { wireCheckpointCreation } from './checkpoint-listener'
 import { startMcpServer, stopMcpServer } from './mcp-server'
 import { wireAgentBoard } from './agent-board'
 
-// Some machines (VMs, RDP sessions, IoT/embedded Windows editions) have a GPU
-// process that never produces a composited frame, which means the window's
-// 'ready-to-show' event — and therefore win.show() — never fires. Software
-// rendering avoids that hang.
-app.disableHardwareAcceleration()
+// Hardware acceleration is intentionally left ON. Some machines (VMs, RDP sessions,
+// IoT/embedded Windows editions) have a GPU process that never produces a composited
+// frame, which used to mean 'ready-to-show' — and therefore win.show() — never fired.
+// That's now handled below instead: a did-finish-load fallback shows the window on a
+// timer regardless of compositor state, so the same VM/IoT case is covered without
+// forcing every machine onto slow CPU-rasterized rendering (blur, WebGL terminal, and
+// general compositing all pay for that unconditionally otherwise).
 
 // file:// doesn't resolve with sandbox: true, so background images are served over
 // our own scheme. Must be flagged privileged before the app is ready; the actual
@@ -40,12 +42,12 @@ function createWindow(): BrowserWindow {
     show: false,
     // Mirrors --substrate / --muted from src/renderer/src/styles/tokens.css — the main
     // process can't read a CSS custom property, so the token's literal value lives here too.
-    backgroundColor: '#141210',
+    backgroundColor: '#1c1c1e',
     autoHideMenuBar: true,
     titleBarStyle: 'hidden',
     titleBarOverlay: {
-      color: '#141210',
-      symbolColor: '#8a8378',
+      color: '#1c1c1e',
+      symbolColor: '#8e8e93',
       height: 36
     },
     ...(useMica ? { backgroundMaterial: 'mica' as const, transparent: true } : {}),
@@ -85,7 +87,9 @@ function createWindow(): BrowserWindow {
   }
 
   win.on('ready-to-show', showOnce)
-  // Fallback in case the compositor never reports ready (see disableHardwareAcceleration above).
+  // Fallback in case the compositor never reports ready (VM/RDP/IoT GPU quirks — see the
+  // hardware-acceleration comment at the top of this file). did-finish-load fires on page
+  // load regardless of compositor state, so the window still shows up on a timer either way.
   win.webContents.once('did-finish-load', () => setTimeout(showOnce, 1500))
 
   if (is.dev) {

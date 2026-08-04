@@ -191,7 +191,7 @@ export default function TerminalPane({
 
   return (
     <div
-      className="surface h-full w-full px-3 py-2"
+      className="surface-tint h-full w-full px-3 py-2"
       style={{ display: active ? 'block' : 'none' }}
       onClick={() => xtermRef.current?.focus()}
     >

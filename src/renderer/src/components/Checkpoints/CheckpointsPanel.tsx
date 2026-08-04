@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { X, RotateCcw, AlertTriangle, Camera } from 'lucide-react'
+import { RotateCcw, AlertTriangle, Camera } from 'lucide-react'
 import { useExplorerStore } from '@renderer/store/explorerStore'
 import { parseDiff } from '@renderer/components/Preview/diff'
+import SidePanel from '@renderer/components/ui/SidePanel'
 import type { CheckpointMeta, GitRepoCheckResult } from '@shared/types'
 
 interface CheckpointsPanelProps {
@@ -79,17 +80,7 @@ export default function CheckpointsPanel({ onClose }: CheckpointsPanelProps): JS
   const changedFiles = [...new Set(diffLines.filter((l) => l.type === 'meta' && l.text.startsWith('+++ b/')).map((l) => l.text.slice(6)))]
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 flex w-[460px] flex-col border-l border-rule bg-panel text-base-200 animate-slide-up">
-      <div className="flex items-center justify-between border-b border-base-700/60 px-3 py-2">
-        <span className="flex items-center gap-1.5 font-medium text-base-100">
-          <Camera size={13} />
-          Checkpoints
-        </span>
-        <button className="rounded p-1 text-base-400 hover:bg-base-700/60" onClick={onClose} title="Fechar">
-          <X size={14} />
-        </button>
-      </div>
-
+    <SidePanel title="Checkpoints" icon={Camera} onClose={onClose} width={460}>
       {!rootPath && <div className="p-3 text-[12px] text-base-500">Abra uma pasta primeiro.</div>}
 
       {rootPath && repoCheck && !repoCheck.isGitRepo && (
@@ -187,6 +178,6 @@ export default function CheckpointsPanel({ onClose }: CheckpointsPanelProps): JS
       {status && (
         <div className="border-t border-rule px-3 py-1.5 text-[11px] text-base-400">{status}</div>
       )}
-    </div>
+    </SidePanel>
   )
 }

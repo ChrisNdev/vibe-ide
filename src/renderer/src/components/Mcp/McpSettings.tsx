@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { X, Plug, Unplug } from 'lucide-react'
+import { Plug, Unplug } from 'lucide-react'
 import { useExplorerStore } from '@renderer/store/explorerStore'
+import SidePanel from '@renderer/components/ui/SidePanel'
 
 interface McpSettingsProps {
   onClose: () => void
@@ -51,14 +52,8 @@ export default function McpSettings({ onClose }: McpSettingsProps): JSX.Element 
   }
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 flex w-[340px] flex-col gap-4 overflow-y-auto border-l border-rule bg-panel p-3 text-base-200 animate-slide-up">
-      <div className="flex items-center justify-between">
-        <span className="font-medium text-base-100">Servidor MCP</span>
-        <button className="rounded p-1 text-base-400 hover:bg-base-700/60" onClick={onClose} title="Fechar">
-          <X size={14} />
-        </button>
-      </div>
-
+    <SidePanel title="Servidor MCP" icon={Plug} onClose={onClose} width={360}>
+      <div className="flex flex-col gap-4 overflow-y-auto p-4">
       {!rootPath && <div className="text-[12px] text-base-500">Abra uma pasta primeiro.</div>}
 
       {rootPath && (
@@ -93,6 +88,7 @@ export default function McpSettings({ onClose }: McpSettingsProps): JSX.Element 
           </div>
         </>
       )}
-    </div>
+      </div>
+    </SidePanel>
   )
 }

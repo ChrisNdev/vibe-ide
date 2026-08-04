@@ -5,11 +5,11 @@ import type { ITheme } from '@xterm/xterm'
 // 16 ANSI slots — carries shell-output meaning (git status colors, ls --color, etc.) and is
 // intentionally left alone: the WebGL terminal renderer is protected by INVARIANTES.
 export const xtermTheme: ITheme = {
-  background: '#141210',
+  background: '#1c1c1e',
   foreground: '#c4c4cc',
-  cursor: '#39d98a',
-  cursorAccent: '#141210',
-  selectionBackground: 'rgba(57, 217, 138, 0.25)',
+  cursor: '#0a84ff',
+  cursorAccent: '#1c1c1e',
+  selectionBackground: 'rgba(10, 132, 255, 0.25)',
   black: '#18181c',
   red: '#e5484d',
   green: '#39d98a',

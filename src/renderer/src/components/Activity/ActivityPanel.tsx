@@ -114,7 +114,7 @@ export default function ActivityPanel({ active, onResumed }: ActivityPanelProps)
         </button>
       </div>
 
-      <div className="surface min-h-0 flex-1 overflow-y-auto bg-base-900">
+      <div className="surface-tint min-h-0 flex-1 overflow-y-auto">
         {!transcript && <div className="p-4 text-xs text-base-500">Nenhuma atividade ainda nesta sessão.</div>}
 
         {transcript?.unrecognizedFormat && (

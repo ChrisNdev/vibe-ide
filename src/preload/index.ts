@@ -118,7 +118,8 @@ const api = {
     installUpdate: (releaseTag: string): Promise<UpdateInstallResult> =>
       ipcRenderer.invoke(IPC.APP_INSTALL_UPDATE, releaseTag),
     openExternal: (url: string): Promise<void> => ipcRenderer.invoke(IPC.APP_OPEN_EXTERNAL, url),
-    getPendingPatchNotes: (): Promise<PendingPatchNotes | null> => ipcRenderer.invoke(IPC.APP_GET_PENDING_PATCH_NOTES)
+    getPendingPatchNotes: (): Promise<PendingPatchNotes | null> => ipcRenderer.invoke(IPC.APP_GET_PENDING_PATCH_NOTES),
+    getCurrentVersionNotes: (): Promise<PendingPatchNotes> => ipcRenderer.invoke(IPC.APP_GET_CURRENT_VERSION_NOTES)
   },
   graph: {
     build: (rootPath: string): Promise<ProjectGraph> => ipcRenderer.invoke(IPC.GRAPH_BUILD, rootPath)

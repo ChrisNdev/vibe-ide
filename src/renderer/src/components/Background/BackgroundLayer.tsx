@@ -6,7 +6,7 @@ import ProceduralBackground from './ProceduralBackground'
 
 /** Maps L0's luminance onto --substrate → --spot, so any photo enters the app's ink palette. */
 function DuotoneFilter({ spot }: { spot: string }): JSX.Element {
-  const substrate = hexToRgb01('#141210')
+  const substrate = hexToRgb01('#1c1c1e')
   const [sr, sg, sb] = spot ? hexToRgb01(spot) : [0.77, 0.27, 0.5]
   return (
     <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
@@ -35,6 +35,13 @@ export default function BackgroundLayer(): JSX.Element | null {
   const lastSampledRef = useRef<string | null>(null)
 
   const sampleKey = config.kind === 'image' ? blurredUrl : config.kind === 'gradient' ? `${config.gradientFrom}|${config.gradientTo}` : config.kind === 'solid' ? config.solidColor : null
+
+  // --surface-alpha only exists as a static :root fallback in background.css — nothing else
+  // pushed the "Opacidade das superfícies" slider's actual value into it, so every .surface
+  // panel (sidebar, terminal, all the settings panels) silently ignored the setting entirely.
+  useEffect(() => {
+    document.documentElement.style.setProperty('--surface-alpha', String(config.surfaceAlpha))
+  }, [config.surfaceAlpha])
 
   // Guarda de contraste — obrigatória, sempre roda (não é gated pelo toggle
   // "Contraste garantido": esse toggle é travado em ligado na UI, ver BackgroundSettings).

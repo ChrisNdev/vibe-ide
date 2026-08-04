@@ -2,6 +2,33 @@
 
 Todas as mudanças notáveis do vibeIDE ficam registradas aqui. Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [1.4.0] — 2026-08-03
+
+### Visual — vidro por padrão
+
+- Sistema de cores trocado das tintas CMYK pra paleta neutra estilo macOS dark mode, com azul (`systemBlue`) como cor de destaque no lugar do verde.
+- Cantos arredondados, sombras e um fundo em gradiente ligado por padrão — os painéis flutuantes (busca, worktree, configurações, notas de versão) agora usam vidro de verdade (`backdrop-filter`), com um brilho fino no topo que é a assinatura visual do estilo.
+- Sidebar, moldura do terminal, barra de ícones, barra de commit, mapa mental, preview e atividade usam uma versão mais barata do vidro (só cor translúcida, sem blur) — ver "Desempenho" abaixo.
+
+### Menu mais enxuto
+
+- As 5 funções avançadas (Aparência, Notificações, Pontos de restauração, Ferramentas extras pro Claude, Tarefas em paralelo) saíram da barra principal e foram pro botão **"Mais opções"**, cada uma com uma frase em português simples explicando o que faz.
+- **Tela de boas-vindas** — na primeira vez que você abre um projeto, um guia rápido explica o que cada aba faz (Terminal, Mapa mental, Visualizador, Atividade, Verificação, Buscar, Mais opções). Aparece só uma vez.
+
+### Corrigido
+
+- **App travava ao abrir/fechar painéis** — 7 estados booleanos independentes controlavam os painéis do lado direito; eles podiam empilhar de forma invisível (mesma posição, mesmo z-index, decidido pela ordem do DOM em vez da ordem de clique). Virou um único estado — só um painel pode estar aberto por vez, por construção.
+- **Tecla Esc não fechava a maioria dos painéis** — Worktree, MCP, Hooks, Checkpoints e Aparência nunca tinham isso implementado. Centralizado num componente `SidePanel` compartilhado.
+- **Painel flutuava embaixo dos botões nativos do Windows** — o app reserva 36px no topo pro Windows desenhar minimizar/maximizar/fechar por cima; os painéis começavam a 12px do topo, ficando parcialmente cobertos.
+- **Explorador de arquivos, barra de commit, atividade, preview e mapa mental não ficavam com vidro** — tinham um fundo opaco (`bg-base-850`/`bg-base-900`) próprio, por cima do vidro do painel pai, cobrindo o efeito inteiro.
+- **Slider "Opacidade das superfícies" não fazia nada** — a variável CSS que controla a opacidade do vidro nunca era sincronizada com a configuração; ficava sempre no valor padrão fixo.
+- **Notas de versão nunca apareciam se nenhum projeto estivesse aberto** — o modal só era renderizado dentro do branch "projeto aberto", então sumia silenciosamente pra quem atualizava e não tinha reaberto um projeto ainda.
+
+### Desempenho
+
+- **App ficando lento com o mouse em qualquer lugar** — a máquina roda com aceleração de hardware desligada (workaround de VM/RDP/Windows IoT), então todo `backdrop-filter: blur()` caía pra renderização por software, muito mais cara. Religada por padrão — o código já tinha um fallback de 1.5s que mostra a janela mesmo se o compositor nunca ficar pronto, então o caso raro continua coberto sem penalizar todo mundo.
+- Blur de verdade agora só nos painéis ocasionais (que abrem e fecham); tudo que fica sempre visível usa só cor translúcida, sem o custo de recalcular blur a cada repintura.
+
 ## [1.3.1] — 2026-08-03
 
 ### Corrigido

@@ -8,19 +8,20 @@ interface StoreSchema {
   lastSeenVersion: string | null
 }
 
+/** On by default — "glass" panels have nothing to catch the light off of without an ambient backdrop behind them. */
 export const DEFAULT_BACKGROUND: BackgroundConfig = {
-  kind: 'none',
+  kind: 'gradient',
   imageId: null,
-  gradientFrom: '#141210',
-  gradientTo: '#2a2724',
-  solidColor: '#141210',
+  gradientFrom: '#1a1d24',
+  gradientTo: '#0e0f12',
+  solidColor: '#1c1c1e',
   proceduralId: null,
-  blur: 24,
+  blur: 40,
   brightness: 1,
   saturation: 1,
-  veil: 0.72,
-  surfaceAlpha: 0.78,
-  spot: '#c4457f',
+  veil: 0.58,
+  surfaceAlpha: 0.45,
+  spot: '#0a84ff',
   contrastGuaranteed: true,
   terminalTranslucent: false,
   useSystemWallpaper: false
