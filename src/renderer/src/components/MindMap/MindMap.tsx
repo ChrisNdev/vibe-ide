@@ -4,7 +4,7 @@ import type { ProjectGraph, GraphNode } from '@shared/types'
 import { join } from '@renderer/components/Explorer/pathUtils'
 import { useExplorerStore } from '@renderer/store/explorerStore'
 import { formatSize, formatTokens } from '@renderer/components/Preview/tokenEstimate'
-import { treemap, type Rect } from './treemapLayout'
+import { treemap, fitLabel, LABEL_FONT_SIZE, LABEL_PAD_X, LABEL_BASELINE, type Rect } from './treemapLayout'
 import { inkFillClass } from './colors'
 
 interface MindMapProps {
@@ -14,9 +14,12 @@ interface MindMapProps {
 
 const MIN_SCALE = 0.15
 const MAX_SCALE = 8
-/** rect must render at least this wide/tall (world units × zoom) before its label is worth drawing */
-const LABEL_MIN_W = 34
-const LABEL_MIN_H = 14
+/**
+ * Abaixo desta altura na tela (unidades de mundo × zoom) o texto é ilegível de qualquer jeito,
+ * mesmo cabendo no retângulo. Só isso depende do zoom: o que *cabe* é decidido em unidades de
+ * mundo por fitLabel(), e essa proporção não muda com o zoom.
+ */
+const LABEL_MIN_RENDERED_H = 7
 const TRANSFORM_COMMIT_DEBOUNCE_MS = 120
 
 interface ViewTransform {
@@ -223,7 +226,8 @@ export default function MindMap({ rootPath, active }: MindMapProps): JSX.Element
   }, [graph, selectedIds])
 
   const totalSize = graph ? graph.nodes.reduce((sum, n) => sum + n.size, 0) : 0
-  const showLabel = (r: Rect): boolean => r.w * transform.k > LABEL_MIN_W && r.h * transform.k > LABEL_MIN_H
+  const labelFor = (label: string, r: Rect): string | null =>
+    r.h * transform.k < LABEL_MIN_RENDERED_H ? null : fitLabel(label, r)
 
   return (
     <div className="flex h-full w-full flex-col" style={{ display: active ? 'flex' : 'none' }}>
@@ -328,6 +332,7 @@ export default function MindMap({ rootPath, active }: MindMapProps): JSX.Element
                 const isSelected = selectedIds.has(n.id)
                 const isNeighbor = neighbors.has(n.id)
                 const dimmed = selectedIds.size > 0 && !isSelected && !isNeighbor
+                const label = labelFor(n.label, r)
                 return (
                   <g
                     key={n.id}
@@ -352,9 +357,16 @@ export default function MindMap({ rootPath, active }: MindMapProps): JSX.Element
                       strokeWidth={n.inCycle || isSelected ? 1.5 : 0.5}
                       strokeDasharray={n.orphan ? '3,2' : undefined}
                     />
-                    {showLabel(r) && (
-                      <text x={r.x + 4} y={r.y + 12} fontSize={10} className="font-mono" fill="var(--paper)" style={{ userSelect: 'none', pointerEvents: 'none' }}>
-                        {n.label.length > 22 ? n.label.slice(0, 20) + '…' : n.label}
+                    {label && (
+                      <text
+                        x={r.x + LABEL_PAD_X}
+                        y={r.y + LABEL_BASELINE}
+                        fontSize={LABEL_FONT_SIZE}
+                        className="font-mono"
+                        fill="var(--paper)"
+                        style={{ userSelect: 'none', pointerEvents: 'none' }}
+                      >
+                        {label}
                       </text>
                     )}
                   </g>

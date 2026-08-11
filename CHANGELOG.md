@@ -6,6 +6,8 @@ Todas as mudanças notáveis do vibeIDE ficam registradas aqui. Formato baseado 
 
 ### Corrigido
 
+- **Nomes de arquivo se sobrepunham no mapa mental** — o nome era cortado num limite fixo de 22 caracteres, sem nenhuma relação com a largura do retângulo em que ia ser desenhado. Como `<text>` do SVG não é recortado pela caixa irmã, todo nome mais largo que o próprio retângulo passava por cima dos vizinhos e embaralhava a leitura do mapa inteiro nas regiões de arquivos pequenos. Agora o corte é calculado a partir da largura disponível (a fonte é monoespaçada, então isso é aritmética, sem medir no DOM), e um retângulo baixo demais pro texto caber na altura simplesmente não recebe nome.
+
 - **App fechava sozinho ao rodar um script na aba Verificação** — se o gerenciador de pacotes (`npm`/`pnpm`/`yarn`) não estivesse no PATH, o processo filho emitia um evento `error` que ninguém escutava. Em Node isso não é um erro tratável: vira exceção não capturada e derruba o processo principal inteiro. Agora a falha aparece como texto no painel de saída, como qualquer outro erro do script.
 - **Terminal podia ficar mudo depois de reabrir** — ao criar um terminal com um id que acabou de ser encerrado, o `onExit` atrasado do processo antigo removia do mapa a sessão *nova*. A partir daí tudo que era digitado ia pro vazio e o app ainda escrevia "processo encerrado" num terminal que estava vivo. A remoção agora confere a identidade da sessão, não só o id.
 - **Terminal em branco sem explicação** — quando o shell não existe ou a pasta do projeto sumiu, o `node-pty` falha na hora; esse erro só rejeitava a chamada interna e o painel ficava preto e vazio. Agora a mensagem real do sistema aparece dentro do próprio terminal.

@@ -11,7 +11,7 @@
     "build": "electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:win": "npm run build && electron-builder --win",
-    "test": "esbuild src/main/transcript-tailer.test.ts --bundle --platform=node --target=node18 --outfile=out/test/transcript-tailer.cjs && node out/test/transcript-tailer.cjs",
+    "test": "esbuild src/main/transcript-tailer.test.ts src/renderer/src/components/MindMap/treemapLayout.test.ts --bundle --platform=node --target=node18 --outbase=src --outdir=out/test --out-extension:.js=.cjs && node out/test/main/transcript-tailer.test.cjs && node out/test/renderer/src/components/MindMap/treemapLayout.test.cjs",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
   },
   "dependencies": {

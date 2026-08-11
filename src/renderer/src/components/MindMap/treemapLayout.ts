@@ -61,3 +61,32 @@ export function treemap(items: Weighted[], x: number, y: number, w: number, h: n
   layout(sorted, x, y, w, h, out)
   return out
 }
+
+/** Métricas do label em unidades de mundo — o fontSize não escala por retângulo, então são constantes. */
+export const LABEL_FONT_SIZE = 10
+export const LABEL_PAD_X = 4
+export const LABEL_BASELINE = 12
+/**
+ * Commit Mono, como toda fonte monoespaçada, avança uma fração fixa do em por glifo. 0,62 em
+ * vez dos 0,6 nominais deixa uma folga pras fontes de fallback: o erro cai pro lado de cortar
+ * um caractere a mais, nunca pro lado de vazar no retângulo vizinho.
+ */
+const CHAR_ADVANCE = 0.62
+
+/**
+ * Recorta o label pro que cabe dentro do retângulo, ou null se não cabe nada legível.
+ *
+ * Os retângulos do treemap nunca se sobrepõem, mas `<text>` do SVG não é recortado pelo
+ * retângulo irmão — um nome cortado num limite fixo de caracteres, sem olhar a largura
+ * disponível, atravessa por cima dos vizinhos e embaralha a leitura do mapa inteiro. Como a
+ * fonte é monoespaçada, quantos caracteres cabem é aritmética, sem precisar medir no DOM.
+ */
+export function fitLabel(label: string, r: Rect): string | null {
+  // A baseline fica em LABEL_BASELINE; +3 cobre os descendentes (p, g, y) dentro do retângulo.
+  if (r.h < LABEL_BASELINE + 3) return null
+  const maxChars = Math.floor((r.w - LABEL_PAD_X * 2) / (LABEL_FONT_SIZE * CHAR_ADVANCE))
+  if (maxChars < 3) return null
+  if (label.length <= maxChars) return label
+  // '…' ocupa exatamente uma célula na monoespaçada, então o corte abre espaço pra ele.
+  return label.slice(0, maxChars - 1) + '…'
+}
