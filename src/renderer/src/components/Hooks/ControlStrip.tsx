@@ -1,8 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useActivityStore } from '@renderer/store/activityStore'
 
-/** Claude's standard context window (Sonnet/Opus). Accounts with the 1M beta will read low — no per-account limit is exposed anywhere to know better. */
-const CONTEXT_WINDOW = 200_000
+/**
+ * Nada no transcript declara o tamanho da janela de contexto da conta, então ele é deduzido:
+ * a menor janela conhecida que ainda comporta o que já foi observado. Fixar 200k travava a
+ * barra em 100% pra quem tem a janela de 1M — a sessão seguia perfeitamente saudável com o
+ * indicador vermelho e cravado no talo, que é pior do que não ter indicador nenhum.
+ */
+const CONTEXT_WINDOWS = [200_000, 1_000_000]
+
+function inferContextWindow(tokensUsed: number): number {
+  return CONTEXT_WINDOWS.find((w) => tokensUsed <= w) ?? CONTEXT_WINDOWS[CONTEXT_WINDOWS.length - 1]
+}
 
 /**
  * "Tira de controle" — the design system's signature element. Fill now tracks real
@@ -23,7 +32,8 @@ export default function ControlStrip(): JSX.Element {
 
   const last = usage && usage.length > 0 ? usage[usage.length - 1] : null
   const tokensUsed = last ? last.inputTokens + last.cacheCreationTokens + last.cacheReadTokens : 0
-  const percent = Math.min(100, Math.round((tokensUsed / CONTEXT_WINDOW) * 100))
+  const contextWindow = inferContextWindow(tokensUsed)
+  const percent = Math.min(100, Math.round((tokensUsed / contextWindow) * 100))
   const barColor = percent >= 90 ? 'bg-danger' : percent >= 70 ? 'bg-ink-yellow' : 'bg-ink-cyan'
 
   return (
@@ -31,7 +41,7 @@ export default function ControlStrip(): JSX.Element {
       className="flex h-3 items-center gap-1.5 px-2"
       title={
         last
-          ? `Contexto usado: ${tokensUsed.toLocaleString('pt-BR')} / ${CONTEXT_WINDOW.toLocaleString('pt-BR')} tokens (${percent}%)`
+          ? `Contexto usado: ${tokensUsed.toLocaleString('pt-BR')} / ${contextWindow.toLocaleString('pt-BR')} tokens (${percent}%)`
           : 'Contexto — nenhuma atividade ainda nesta sessão'
       }
     >

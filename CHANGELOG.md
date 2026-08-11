@@ -2,6 +2,26 @@
 
 Todas as mudanças notáveis do vibeIDE ficam registradas aqui. Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [1.4.5] — 2026-08-11
+
+### Corrigido
+
+- **App fechava sozinho ao rodar um script na aba Verificação** — se o gerenciador de pacotes (`npm`/`pnpm`/`yarn`) não estivesse no PATH, o processo filho emitia um evento `error` que ninguém escutava. Em Node isso não é um erro tratável: vira exceção não capturada e derruba o processo principal inteiro. Agora a falha aparece como texto no painel de saída, como qualquer outro erro do script.
+- **Terminal podia ficar mudo depois de reabrir** — ao criar um terminal com um id que acabou de ser encerrado, o `onExit` atrasado do processo antigo removia do mapa a sessão *nova*. A partir daí tudo que era digitado ia pro vazio e o app ainda escrevia "processo encerrado" num terminal que estava vivo. A remoção agora confere a identidade da sessão, não só o id.
+- **Terminal em branco sem explicação** — quando o shell não existe ou a pasta do projeto sumiu, o `node-pty` falha na hora; esse erro só rejeitava a chamada interna e o painel ficava preto e vazio. Agora a mensagem real do sistema aparece dentro do próprio terminal.
+- **Botão "+" de novo terminal era inalcançável** — a barra de abas só aparecia com 2 abas ou mais, e o "+" mora nela. Como ele era o único jeito de chegar na segunda aba, uma segunda aba nunca podia existir. A barra aparece a partir da primeira aba.
+- **Painel de atividade travava ou contava duas vezes** — três causas somadas no leitor do transcript: uma linha capturada no meio da escrita era contada como "formato não reconhecido"; bytes gravados durante a leitura eram lidos de novo na passada seguinte, duplicando tool calls e tokens; e um evento que chegasse durante uma leitura era descartado, deixando o painel parado no estado anterior — justamente no fim de cada turno. Se o arquivo fosse reescrito, o painel congelava de vez.
+- **Erros de console do preview apareciam repetidos** — o `<webview>` do painel de Verificação ganhava um par novo de listeners a cada re-renderização, e um dev server re-renderiza a cada pedaço de saída. O mesmo erro era registrado dezenas de vezes.
+- **Busca podia parar de mostrar o progresso** — quando o `ripgrep` falhava ao iniciar, "erro" e "fim" disparavam os dois, mandando dois eventos de conclusão pra interface.
+- **App congelava ao fechar com vários terminais abertos** — encerrar a árvore de processos de cada terminal era uma chamada síncrona ao `taskkill`, que segurava o processo principal por volta de 100ms por terminal vivo antes da janela sumir. Agora roda desanexado: não bloqueia nada e ainda conclui mesmo que o app feche primeiro. Vale igual pro botão "parar" da aba Verificação, que tinha a mesma chamada.
+
+- **Barra de contexto cravada em 100%** — a janela de contexto era um `200.000` fixo no código, então quem tem a janela de 1M via a barra vermelha no talo o tempo todo, com a sessão perfeitamente saudável — um indicador que só sabe dizer "cheio" é pior que indicador nenhum. Agora o tamanho da janela é deduzido do maior uso já observado.
+
+### Melhorado
+
+- **Instalador com a cara do app** — o painel lateral e o cabeçalho do instalador NSIS agora usam a identidade visual do vibeIDE (fundo escuro, a marca de registro, o wordmark), em vez da arte genérica padrão. A arte é gerada por `build/make-installer-art.ps1`, junto com o ícone.
+- **Instalador menos suspeito pro Windows** — o `.exe` agora carrega os metadados de versão completos (copyright, editor), que faltando pioram a nota nas heurísticas do Defender. Toda release passa a incluir também um `.zip` sem instalador, pra quem tiver o `Setup.exe` bloqueado ou posto em quarentena. O build já está preparado pra assinatura digital (`CSC_LINK`/`CSC_KEY_PASSWORD`) — que é o que de fato resolve o aviso do SmartScreen; ver o README.
+
 ## [1.4.4] — 2026-08-04
 
 ### Adicionado

@@ -164,8 +164,12 @@ interface WatchHandle {
   watcher: FSWatcher
   filePath: string
   offset: number
+  /** bytes read but not yet ending in a newline — a line Claude Code is still mid-write on */
+  pending: string
   accumulator: SessionAccumulator
   reading: boolean
+  /** a change event that arrived mid-read — replayed once the read finishes instead of dropped */
+  rerun: boolean
 }
 
 const activeWatches = new Map<number, WatchHandle>()
@@ -187,14 +191,41 @@ async function pickMostRecentSession(dir: string): Promise<string | null> {
 
 /** Reads new bytes since the tracked offset and folds complete lines into the accumulator. Never re-reads earlier bytes. */
 async function readIncrement(handle: WatchHandle, onUpdate: (state: TranscriptState) => void): Promise<void> {
-  if (handle.reading) return
+  // Dropping a mid-read change event leaves the panel stale until the *next* write — and the
+  // collision is likeliest on a turn's final append, which is exactly when nothing follows it.
+  if (handle.reading) {
+    handle.rerun = true
+    return
+  }
   handle.reading = true
   try {
     const stat = await fsp.stat(handle.filePath)
+    // Shrunk = the file was rotated/rewritten behind us. Without resetting, offset stays past
+    // EOF forever and the panel silently freezes on whatever it had at that moment.
+    if (stat.size < handle.offset) {
+      handle.offset = 0
+      handle.pending = ''
+    }
     if (stat.size <= handle.offset) return
-    const stream = fs.createReadStream(handle.filePath, { start: handle.offset, encoding: 'utf-8' })
-    const rl = readline.createInterface({ input: stream, crlfDelay: Infinity })
-    for await (const line of rl) {
+    // Bounded to the size we just stat'd, and the offset advances by exactly what we read —
+    // an open-ended stream can pick up bytes appended mid-read, which the old `offset = stat.size`
+    // then re-read on the next pass, double-counting those tool calls and usage points.
+    const end = stat.size - 1
+    const chunk = await new Promise<string>((resolve, reject) => {
+      const stream = fs.createReadStream(handle.filePath, { start: handle.offset, end, encoding: 'utf-8' })
+      let data = ''
+      stream.on('data', (part) => {
+        data += part
+      })
+      stream.on('end', () => resolve(data))
+      stream.on('error', reject)
+    })
+    // A trailing fragment is a line still being written, not a malformed one — carrying it over
+    // instead of parsing it keeps it out of failedLines, which otherwise creeps past the 20%
+    // threshold and makes the panel claim the transcript format is unrecognized.
+    const lines = (handle.pending + chunk).split('\n')
+    handle.pending = lines.pop() ?? ''
+    for (const line of lines) {
       handle.accumulator.ingestLine(line)
     }
     handle.offset = stat.size
@@ -203,6 +234,10 @@ async function readIncrement(handle: WatchHandle, onUpdate: (state: TranscriptSt
     // transient read error (file rotated mid-read, etc.) — next chokidar event will retry
   } finally {
     handle.reading = false
+  }
+  if (handle.rerun) {
+    handle.rerun = false
+    await readIncrement(handle, onUpdate)
   }
 }
 
@@ -218,7 +253,7 @@ export async function watchSession(
 
   const filePath = path.join(dir, sessionFile)
   const accumulator = new SessionAccumulator()
-  const handle: WatchHandle = { watcher: chokidar.watch(filePath, { ignoreInitial: true }), filePath, offset: 0, accumulator, reading: false }
+  const handle: WatchHandle = { watcher: chokidar.watch(filePath, { ignoreInitial: true }), filePath, offset: 0, pending: '', accumulator, reading: false, rerun: false }
   activeWatches.set(windowId, handle)
 
   handle.watcher.on('change', () => void readIncrement(handle, onUpdate))

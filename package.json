@@ -1,6 +1,6 @@
 {
   "name": "vibe-ide",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Cockpit desktop para rodar o Claude Code — explorador de arquivos + terminal real",
   "main": "./out/main/index.js",
   "author": "Christian",
@@ -11,6 +11,7 @@
     "build": "electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:win": "npm run build && electron-builder --win",
+    "test": "esbuild src/main/transcript-tailer.test.ts --bundle --platform=node --target=node18 --outfile=out/test/transcript-tailer.cjs && node out/test/transcript-tailer.cjs",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
   },
   "dependencies": {

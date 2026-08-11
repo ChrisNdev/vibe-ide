@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Play, Square, Send, RefreshCw, AlertCircle } from 'lucide-react'
 import { useExplorerStore } from '@renderer/store/explorerStore'
 import { useTerminalStore } from '@renderer/store/terminalStore'
@@ -79,12 +79,16 @@ export default function VerificationPanel({ active }: VerificationPanelProps): J
     setDiagnosticsLoading(false)
   }
 
-  const recordConsoleError = (entry: ConsoleErrorEntry): void => {
+  const recordConsoleError = useCallback((entry: ConsoleErrorEntry): void => {
     setConsoleErrors((prev) => [...prev.slice(-199), entry])
     void window.api.consoleErrors.report(entry)
-  }
+  }, [])
 
-  const attachWebviewListeners = (el: Electron.WebviewTag | null): void => {
+  // Stable identity is the whole point: as an inline function this ref callback was a new
+  // function every render, so React detached and re-ran it on each one — stacking a fresh pair
+  // of listeners on the *same* webview element. While a dev server streams output (a re-render
+  // per chunk) that meant every console error being recorded dozens of times over.
+  const attachWebviewListeners = useCallback((el: Electron.WebviewTag | null): void => {
     webviewRef.current = el
     if (!el) return
     el.addEventListener('console-message', (e) => {
@@ -97,7 +101,7 @@ export default function VerificationPanel({ active }: VerificationPanelProps): J
       if (e.errorCode === -3) return // ERR_ABORTED — routine (e.g. HMR navigations), not a real failure
       recordConsoleError({ timestamp: new Date().toISOString(), type: 'failed-request', message: `${e.errorDescription} (${e.validatedURL})` })
     })
-  }
+  }, [recordConsoleError])
 
   const sendToClaude = (entry: ConsoleErrorEntry): void => {
     if (!activeTabId) return

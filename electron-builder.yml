@@ -1,5 +1,9 @@
 appId: com.christian.vibeide
 productName: vibeIDE
+# Fills the exe's LegalCopyright version resource. An unsigned binary with blank version
+# metadata scores worse on Defender/SmartScreen heuristics than an unsigned one that at
+# least identifies itself — cheapest part of "não parecer vírus" that costs nothing.
+copyright: Copyright © 2026 Christian — MIT
 directories:
   buildResources: build
 asarUnpack:
@@ -7,11 +11,26 @@ asarUnpack:
   - '**/node_modules/@oxc-parser/**/*'
 win:
   executableName: vibe-ide
+  # Real signing is what actually clears SmartScreen; electron-builder picks the certificate
+  # up from the CSC_LINK + CSC_KEY_PASSWORD env vars with no config change here. Left out of
+  # the file on purpose so a .pfx path never lands in git.
+  signtoolOptions:
+    publisherName: Christian
   target:
     - target: nsis
       arch:
         - x64
+    # Escape hatch for anyone whose antivirus quarantines the installer: same app, no NSIS
+    # wrapper (the installer stub is what most heuristics actually flag) — unzip and run.
+    - target: zip
+      arch:
+        - x64
 nsis:
+  # Arte gerada por build/make-installer-art.ps1 (rode de novo se mexer na identidade visual).
+  # Apontadas explicitamente mesmo coincidindo com o padrão do electron-builder: assim um
+  # arquivo renomeado ou faltando quebra o build em vez de voltar calado pro visual genérico.
+  installerSidebar: build/installerSidebar.bmp
+  installerHeader: build/installerHeader.bmp
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true

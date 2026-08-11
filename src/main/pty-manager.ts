@@ -3,8 +3,8 @@ import { BrowserWindow } from 'electron'
 import os from 'os'
 import fs from 'fs'
 import path from 'path'
-import { execFileSync } from 'child_process'
 import { IPC, PtySpawnOptions } from '../shared/types'
+import { killProcessTree } from './kill-tree'
 
 interface Session {
   proc: IPty
@@ -26,22 +26,40 @@ export function spawnPty(win: BrowserWindow, opts: PtySpawnOptions): void {
   const shellPath = opts.shell || defaultShell()
   const isPowerShell = /powershell(\.exe)?$/i.test(shellPath) || /pwsh(\.exe)?$/i.test(shellPath)
 
-  const proc = pty.spawn(shellPath, opts.args ?? [], {
-    name: 'xterm-256color',
-    cols: opts.cols,
-    rows: opts.rows,
-    cwd: opts.cwd,
-    env: { ...process.env, TERM: 'xterm-256color' } as Record<string, string>,
-    useConpty: process.platform === 'win32'
-  })
+  let proc: IPty
+  try {
+    proc = pty.spawn(shellPath, opts.args ?? [], {
+      name: 'xterm-256color',
+      cols: opts.cols,
+      rows: opts.rows,
+      cwd: opts.cwd,
+      env: { ...process.env, TERM: 'xterm-256color' } as Record<string, string>,
+      useConpty: process.platform === 'win32'
+    })
+  } catch (err) {
+    // A missing shell or a cwd that no longer exists throws synchronously. Without this the
+    // IPC call just rejects and the renderer shows an empty black pane with no explanation.
+    const message = err instanceof Error ? err.message : String(err)
+    if (!win.isDestroyed()) {
+      win.webContents.send(IPC.PTY_DATA, { id: opts.id, data: `\r\n\x1b[31mNão consegui abrir o terminal: ${message}\x1b[0m\r\n` })
+      win.webContents.send(IPC.PTY_EXIT, { id: opts.id, exitCode: -1, signal: undefined })
+    }
+    return
+  }
 
-  sessions.set(opts.id, { proc, cwd: opts.cwd })
+  const session: Session = { proc, cwd: opts.cwd }
+  sessions.set(opts.id, session)
 
   proc.onData((data) => {
     if (!win.isDestroyed()) win.webContents.send(IPC.PTY_DATA, { id: opts.id, data })
   })
 
   proc.onExit(({ exitCode, signal }) => {
+    // Identity check, not just the id: killPty() removes the entry synchronously but the old
+    // process's onExit lands later. If a new pty already took the same id (React remount, or a
+    // respawn), deleting by id alone would drop the *live* session from the map — input then
+    // goes nowhere and the renderer gets a bogus "processo encerrado" for a terminal that's fine.
+    if (sessions.get(opts.id) !== session) return
     sessions.delete(opts.id)
     if (!win.isDestroyed()) {
       win.webContents.send(IPC.PTY_EXIT, { id: opts.id, exitCode, signal })
@@ -76,16 +94,9 @@ export function killPty(id: string): void {
   if (!s) return
   sessions.delete(id)
 
-  // On Windows, ConPTY only terminates the immediate shell process — it does not
-  // tear down descendants (e.g. `claude` spawned from PowerShell). Kill the whole
-  // process tree explicitly to avoid orphaned zombie processes after the app quits.
-  if (process.platform === 'win32') {
-    try {
-      execFileSync('taskkill', ['/pid', String(s.proc.pid), '/t', '/f'], { stdio: 'ignore' })
-    } catch {
-      // process tree may already be gone
-    }
-  }
+  // ConPTY only terminates the immediate shell process — it does not tear down descendants
+  // (e.g. `claude` spawned from PowerShell), so the whole tree goes explicitly.
+  killProcessTree(s.proc.pid, () => {})
 
   try {
     s.proc.kill()

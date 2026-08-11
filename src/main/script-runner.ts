@@ -1,10 +1,11 @@
-import { spawn, ChildProcessByStdio, execFileSync } from 'child_process'
+import { spawn, ChildProcessByStdio } from 'child_process'
 import type { Readable } from 'stream'
 import fs from 'fs/promises'
 import fsSync from 'fs'
 import path from 'path'
 import crypto from 'crypto'
 import { PackageScript } from '../shared/types'
+import { killProcessTree } from './kill-tree'
 
 type RunProcess = ChildProcessByStdio<null, Readable, Readable>
 
@@ -45,15 +46,7 @@ export function stopScript(windowId: number): void {
   activeRuns.delete(windowId)
   // Dev-server processes (vite, webpack, next) commonly spawn children that survive
   // a plain kill() of the parent — same reasoning as pty-manager.ts's terminal cleanup.
-  if (process.platform === 'win32' && run.proc.pid) {
-    try {
-      execFileSync('taskkill', ['/pid', String(run.proc.pid), '/t', '/f'], { stdio: 'ignore' })
-    } catch {
-      // already gone
-    }
-  } else {
-    run.proc.kill()
-  }
+  killProcessTree(run.proc.pid, () => run.proc.kill())
 }
 
 export function runScript(
@@ -85,6 +78,13 @@ export function runScript(
 
   proc.stdout.on('data', handleChunk('stdout'))
   proc.stderr.on('data', handleChunk('stderr'))
+  // Required, not optional: a ChildProcess that emits 'error' with no listener throws an
+  // uncaught exception and takes the whole main process down. That fires whenever the package
+  // manager isn't on PATH (npm.cmd/pnpm.cmd/yarn.cmd missing) — i.e. clicking "rodar" on a
+  // machine without Node on PATH used to kill the app instead of printing an error.
+  proc.on('error', (err) => {
+    onOutput(runId, `Não consegui executar "${bin}": ${err.message}\n`, 'stderr')
+  })
   proc.on('close', (exitCode) => {
     if (activeRuns.get(windowId)?.runId === runId) activeRuns.delete(windowId)
     onStatus(runId, { type: 'exit', exitCode })

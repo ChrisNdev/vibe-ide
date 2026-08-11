@@ -10,7 +10,9 @@ export default function TerminalTabs(): JSX.Element | null {
   const addTab = useTerminalStore((s) => s.addTab)
   const rootPath = useExplorerStore((s) => s.rootPath)
 
-  if (tabs.length <= 1) return null
+  // Hidden only with zero tabs. Hiding it at 1 tab also hid the "+" button, and "+" is the only
+  // way to reach a second tab — so a second terminal could never be opened at all.
+  if (tabs.length === 0) return null
 
   const closeTab = async (id: string): Promise<void> => {
     await window.api.pty.kill(id)

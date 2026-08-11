@@ -159,10 +159,16 @@ export function runSearch(
     }
   })
 
+  // 'error' (rg missing / not executable) is followed by 'close', so both fire for the same
+  // search — without this latch the renderer gets two SEARCH_DONE events and stops showing
+  // the spinner for a search that's still running after it, one result set behind.
+  let finished = false
   const finish = (cancelled: boolean): void => {
+    if (finished) return
+    finished = true
     if (batchTimer) clearInterval(batchTimer)
     flush()
-    activeSearches.delete(windowId)
+    if (activeSearches.get(windowId) === proc) activeSearches.delete(windowId)
     onDone(total, truncated, cancelled)
   }
 
