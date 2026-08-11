@@ -15,7 +15,9 @@ public class Win32 {
 }
 "@
 
-$proc = Get-Process -Name "vibe-ide" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+# "vibe-ide" packaged, "electron" in `npm run dev` — same window either way.
+$proc = Get-Process -Name "vibe-ide","electron" -ErrorAction SilentlyContinue |
+  Where-Object { $_.MainWindowHandle -ne 0 -and $_.MainWindowTitle -eq "vibeIDE" } | Select-Object -First 1
 if (-not $proc) { Write-Output "NO_WINDOW"; exit 1 }
 
 $hwnd = $proc.MainWindowHandle
